@@ -1,0 +1,58 @@
+syntax="proto3";
+
+package distcomment;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+
+service DistCommentService {
+    rpc GetInitialCommentData (CommentPostId) returns (ListComments);
+    rpc GetOtherCommentData (CommentPostIdAndId) returns (ListComments);
+    rpc CreateNewComment (CreateNewCommentData) returns (google.protobuf.Empty);
+    rpc UpdateComment (UpdateCommentData) returns (google.protobuf.Empty);
+    rpc DeleteComment (DeleteCommentData) returns (google.protobuf.Empty);
+}
+
+
+
+message CommentPostId {
+    int32 postId = 1;
+}
+
+message CommentPostIdAndId {
+    int32 postId = 1;
+    int32 lastId = 2;
+}
+
+
+message CommentProto {
+    int32 id = 1;
+    int32 userId = 2;
+    int32 postId = 3;
+    string content = 4;
+    google.protobuf.Empty createdAt = 5;
+    google.protobuf.Empty updatedAt = 6;
+}
+
+message ListComments {
+    repeated CommentProto comments = 1;
+}
+
+message CreateNewCommentData {
+    int32 userId = 1;
+    int32 postId = 2;
+    string content = 3;
+}
+
+
+message UpdateCommentData {
+    int32 id = 1;
+    int32 postid = 2;
+    string content = 3;
+}
+
+message DeleteCommentData {
+    int32 id = 1;
+    int32 postId = 2;
+}

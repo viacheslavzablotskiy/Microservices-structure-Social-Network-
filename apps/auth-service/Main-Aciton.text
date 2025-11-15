@@ -1,0 +1,15 @@
+Http Module
+
+that have 
+1. baseUrl, timeout, maxRedirect
+
+we load async to get ConfigModule to get opportunity use .env file 
+
+then based on the Axios for using we have this 
+this.HttpService.get(post)(''(url), data({} get, data post))
+
+we get Obserble<AxiosRepsonse<TsResponse>> to get from Observalbe we use 
+.firsValueFrom  and we get Promise<AxiosResponse<TsResponse>> and to get AxiosResponse<TsResponse>
+we use await because if we use await we delete from type Promise
+
+and by this we get AxiosRepsonse its type like <data, any, any> to get this .data or {data}

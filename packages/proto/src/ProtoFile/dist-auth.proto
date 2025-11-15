@@ -1,0 +1,53 @@
+syntax="proto3";
+
+package distauth;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service DistAuthPathService {
+    rpc RegisterUser (AuthRegiserData) returns (google.protobuf.Empty);
+    rpc LoginUser (AuthLoginData) returns (LoginUserOutputData);
+    rpc RefreshToken (RefreshTokenData) returns (NewAccessToken);
+}
+
+
+message AuthRegiserData  {
+    string login = 1;
+    string email = 2;
+    string password = 3;
+}
+
+message AuthLoginData {
+    string email = 1;
+    string password = 2;
+}
+
+enum UserRolePtroto {
+  USER_ROLE_UNSPECIFIED = 0;
+  ADMIN = 1;
+  USER = 2;
+  GHOST = 3;
+}
+
+message RefreshTokenData {
+    string refreshToken = 1;
+}
+
+message NewAccessToken {
+    string accessToken = 1;
+}
+
+message LoginUserOutputData {
+    int32 id = 1;
+    bool isActivate = 2;
+    bool isVerified = 3;
+    string avatarUrl = 4;
+    string coverUrl = 5;
+    string login = 6;
+    UserRolePtroto role = 7;
+    google.protobuf.Timestamp createdAt = 8;
+    google.protobuf.Timestamp updatedAt = 9;
+    RefreshTokenData refresh_token = 10;
+    NewAccessToken access_token = 11;
+}

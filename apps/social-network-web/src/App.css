@@ -1,0 +1,85 @@
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: url('./upload_image/abstract-modern-art-background-with-flowing-waves-design.jpg') no-repeat center/cover;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* login page */
+
+.layout-ghost-login {
+    display: grid;
+    grid-template-areas: 'left-side right-side';
+    grid-template-columns: 1fr 1fr;
+    min-height: 92vh;
+    min-width: 75vw;
+    gap: 0;
+}
+
+.layout-ghost-login .auth-login-container {
+    grid-area: left-side;
+    box-sizing: border-box;
+    position: relative;
+    background: transparent;
+    overflow: hidden;
+    border: 10px solid white;
+    border-top-left-radius: 40px;
+    border-bottom-left-radius: 40px;
+    color: white;
+}
+
+
+.layout-ghost-login .main-content {
+    grid-area: right-side;
+    box-sizing: border-box;
+    background: white;
+    border-top-right-radius: 40px;
+    border-bottom-right-radius: 40px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* register page */
+
+.layout-ghost-register {
+    display: grid; 
+    grid-template-areas: 'left-r-side right-r-side';
+    grid-template-columns: 1fr 1fr;
+     min-height: 92vh;
+    min-width: 75vw;
+    gap: 0;
+}
+
+.layout-ghost-register .auth-login-container {
+    grid-area: left-r-side;
+    box-sizing: border-box;
+    position: relative;
+    background: transparent;
+    overflow: hidden;
+    border: 10px solid white;
+    border-top-left-radius: 40px;
+    border-bottom-left-radius: 40px;
+    color: white;
+}
+
+.layout-ghost-register .main-content {
+    grid-area: right-r-side;
+    box-sizing: border-box;
+    background: white;
+    border-top-right-radius: 40px;
+    border-bottom-right-radius: 40px;
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+}

@@ -1,0 +1,64 @@
+syntax="proto3";
+
+package auth;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+
+service AuthServiceProto {
+    rpc RegisterUser(AuthRegiserData) returns (google.protobuf.Empty) {}
+    rpc GetUserByEmail(GetUserByEmailData) returns (UserEmalEntity) {}
+    rpc GetUserBy(GetUserByIdData) returns (UserIdEnitity) {}
+
+}
+
+
+message AuthRegiserData  {
+    string login = 1;
+    string email = 2;
+    string password = 3;
+    string passwordHash = 4;
+}
+
+message GetUserByEmailData  {
+    string email = 1;
+}
+
+message GetUserByIdData {
+    int32 id = 1;
+}
+
+enum UserRolePtroto {
+  USER_ROLE_UNSPECIFIED = 0;
+  ADMIN = 1;
+  USER = 2;
+  GHOST = 3;
+}
+
+message UserEmalEntity{
+    int32 id = 1;
+    bool isActivate = 2;
+    bool isVerified = 3;
+    string avatarUrl = 4;
+    string coverUrl = 5;
+    string login = 6;
+    UserRolePtroto role = 7;
+    google.protobuf.Timestamp createdAt = 8;
+    google.protobuf.Timestamp updatedAt = 9;
+    string email = 10;
+    string passwordHash = 11;
+}
+
+message UserIdEnitity {
+    int32 id = 1;
+    bool isActivate = 2;
+    bool isVerified = 3;
+    string avatarUrl = 4;
+    string coverUrl = 5;
+    string login = 6;
+    UserRolePtroto role = 7;
+    google.protobuf.Timestamp createdAt = 8;
+    google.protobuf.Timestamp updatedAt = 9;
+}
+

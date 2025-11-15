@@ -1,0 +1,100 @@
+.form-container-register {
+    width: 70%;
+    height: 100%;
+    background: white;
+}
+
+::placeholder {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.form-container-register .register-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-around;
+    gap: 0;
+}
+
+.containerInput {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.containerInput .form-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 7px;
+    height: 50px;
+    box-sizing: border-box;
+    padding-left: 5px;
+    width: 100%;
+    transition: 0.2s ease-in-out;
+    border: 1.5px solid #ecedec;
+    border-radius: 10px;
+}
+
+.form-group input {
+    border-radius: 10px;
+    border: none;
+    width: 85%;
+    height: 100%;
+    padding: 0px;
+    text-decoration: none;
+}
+
+.register-form .buttons .button-sign-up {
+    background: black;
+    color: white;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 10px;
+    height: 40px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.register-form .buttons .button-sign-up:hover {
+    background: rgb(42, 41, 41);
+}
+
+
+.register-form > p {
+    align-self: center;
+}
+
+.form-group:focus-within {
+    border: 1.5px solid #2d79f3;
+}
+
+.label-thing {
+    color:  #151717;
+    font-weight: 100;
+    font-size: 15px;
+}
+
+.register-form .containerInput:nth-child(1) {
+    position: relative;
+    top: 30px;
+}
+
+.register-form .containerInput:nth-child(2) {
+    position: relative;
+    top: 10px;
+}
+
+.register-form .containerInput:nth-child(3) {
+    position: relative;
+    bottom: 10px;
+}
+
+.register-form .containerInput:nth-child(4) {
+    position: relative;
+    bottom: 20px;
+}

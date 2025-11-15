@@ -1,0 +1,52 @@
+.auth-login-container .inner-container {
+    border-bottom-right-radius: 40px;
+    border-top-right-radius: 40px;
+    height: 100%;
+    box-shadow: 0 0 0 20px white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.inner-container .just-text {
+    display: flex;
+    flex-direction: row;
+    gap: 10px ;
+    font-family: 'Times New Roman', Times, serif;
+    margin-left: 30px;
+    margin-top: 20px;
+    font-size: 15px;
+    font-weight: lighter;
+}
+
+.just-text p:nth-child(2) {
+    margin-top: 7px;
+}
+
+.inner-container .cont {
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+    gap: 0;
+    margin-bottom: 30px;
+}
+
+.inner-container .upper-case {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 60px;
+    font-weight: 200;
+}
+
+.upper-case p {
+    margin: 0;
+}
+.inner-container .lower-case {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    margin-left: 6px;
+    margin-top: 20px;
+}
+.lower-case p {
+    margin: 0;
+}
