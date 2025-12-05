@@ -11,11 +11,14 @@ async function bootstrap() {
     options: {
       package: 'distcomment',
       protoPath: require.resolve('@repo/proto/dist-comment.proto'),
-      url: '0.0.0.0.5003'
+      url: '0.0.0.0:5003'
     }
   })
   const configService = app.get(ConfigService)
-  const port = configService.get<number>('POST', 3000)
+  const port = configService.get<number>('PORT', 3000)
+
+  console.log(port);
+  
 
   app.startAllMicroservices()
   await app.listen(port);

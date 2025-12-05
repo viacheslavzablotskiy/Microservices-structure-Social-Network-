@@ -25,7 +25,7 @@ export const LoginPage  = () => {
 
             const response = await loginUserData(data).unwrap()
             
-            dispatch(setToken(response.access_token))
+            dispatch(setToken(response.accessToken))
             dispatch(loginInUser(response.response))
 
             navigate('/home')

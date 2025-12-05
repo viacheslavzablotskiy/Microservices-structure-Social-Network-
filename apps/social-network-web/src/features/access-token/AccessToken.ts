@@ -3,7 +3,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
 
 export interface AccessTokenAuth {
-    access_token: string
+    accessToken: string
 }
 
 export interface MainValue {
