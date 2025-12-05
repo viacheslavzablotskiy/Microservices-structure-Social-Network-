@@ -2,18 +2,10 @@ name: Publish Packages
 
 on: 
     workflow_dispatch:
-<<<<<<< HEAD
 
-      
-jobs: 
-    publish-typescript-config:
-        runs-on: ubuntu:latest
-=======
-      
 jobs: 
     publish-typescript-config:
         runs-on: ubuntu-22.04
->>>>>>> 65dc573 (new-updates)
         steps: 
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v6
