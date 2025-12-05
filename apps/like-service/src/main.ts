@@ -12,7 +12,7 @@ async function bootstrap() {
       options: {
         package: 'distlike',
         protoPath: require.resolve('@repo/proto/dist-like.proto'),
-        url: '0.0.0.0.5002'
+        url: '0.0.0.0:5002'
       }
     }
   )

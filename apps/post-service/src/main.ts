@@ -11,7 +11,7 @@ async function bootstrap() {
     options: {
       package: 'distpost',
       protoPath: require.resolve('@repo/proto/dist-post.proto'),
-      url: '0.0.0.0.5001'
+      url: '0.0.0.0:5001'
     }
   })
 

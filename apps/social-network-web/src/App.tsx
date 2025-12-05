@@ -12,7 +12,7 @@ import { AuthLayoutSide } from './features/auth/secondBlockRAndLPage'
 
 export const ProtectedRoutes: React.FC = () => {
   const currentAuthUser = useAppSeletctor(state => state.auth.currentAuthUser)
-  const currentAccessToken = useAppSeletctor(state => state.token.currentValue?.access_token)
+  const currentAccessToken = useAppSeletctor(state => state.token.currentValue?.accessToken)
 
   if (!currentAuthUser || !currentAccessToken) {
     return <Navigate to={'/auth/login'} replace></Navigate>

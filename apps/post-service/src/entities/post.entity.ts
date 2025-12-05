@@ -17,7 +17,7 @@ export class PostEntity {
     @Column({nullable: false})
     imageUrl: string
 
-    @CreateDateColumn({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
+    @CreateDateColumn({type: 'timestamp'})
     createdAt: Date
 
     @UpdateDateColumn({type: 'timestamp'})
