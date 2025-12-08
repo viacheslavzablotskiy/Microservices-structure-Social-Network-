@@ -3,6 +3,7 @@ import { PostService } from './providers/main.service';
 import { CrudService } from './providers/crud.service';
 import { GrpcMethod } from '@nestjs/microservices';
 import { Post_Enitity_Proto, type CretionNewPost } from '@repo/user-interfaces';
+import { ReturnPostsDto } from '@repo/proto';
 
 @Controller()
 export class AppController {
@@ -14,13 +15,16 @@ export class AppController {
 
 
   @GrpcMethod('DistPostService', 'GetInitialPosts')
-  async getIntialPosts(data: {}): Promise<Post_Enitity_Proto[]> {
+  async getIntialPosts(data: {}): Promise<ReturnPostsDto> {
     return await this.postService.getInitialState()
   }
 
   @GrpcMethod('DistPostService', 'GetSomePartPosts')
-  async getSomePartPosts(data: {lastId: number}): Promise<Post_Enitity_Proto[]> {
-    return await this.postService.getSomePartOfPost(data.lastId)
+  async getSomePartPosts(data: {lastId: number}): Promise<ReturnPostsDto> {
+    const response = await this.postService.getSomePartOfPost(data.lastId)
+    console.log(response);
+    
+    return response
   }
 
   @GrpcMethod('DistPostService', 'CreateNewPost')

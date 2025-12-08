@@ -1,8 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './providers/auth.service';
-import {ConfigModule} from '@nestjs/config'
+import {ConfigModule, ConfigService} from '@nestjs/config'
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { AuthStragetyModule } from '@repo/api';
+import { JwtModule } from '@nestjs/jwt';
+import {StringValue} from 'ms'
+import { MainCommentController } from './controllers/comments.controller';
+import { MainCommentService } from './providers/comment.service';
+import { MainLikeController } from './controllers/like.controller';
+import { MainPostCOntriller } from './controllers/post.controller';
+import { MainPostService } from './providers/post.service';
+import { LikeMainService } from './providers/like.service';
 
 @Module({
   imports: [
@@ -23,7 +32,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         options: {
           package: 'distpost',
           protoPath: require.resolve('@repo/proto/dist-post.proto'),
-          url: '0.0.0.0.5001'
+          url: '0.0.0.0:5001'
         }
       },
       {
@@ -32,7 +41,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         options: {
           package: 'distcomment',
           protoPath: require.resolve('@repo/proto/dist-comment.proto'),
-          url: '0.0.0.0.5003'
+          url: '0.0.0.0:5003'
         }
       },
       {
@@ -41,12 +50,26 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         options: {
           package: 'distlike',
           protoPath: require.resolve('@repo/proto/dist-like.proto'),
-          url: '0.0.0.0.5002'
+          url: '0.0.0.0:5002'
         }
       }
-    ])
+    ]),
+    JwtModule.registerAsync({
+      global: true,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET') || '',
+        signOptions: {expiresIn: configService.get<StringValue>('JWT_EXPIRES_IN') || '100s'}
+      })
+    }),
+    AuthStragetyModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        refrechTokenSecret: config.get<string>('JWT_REFRESH_SECRET') || ''
+      })
+    })
   ],
-  controllers: [AuthController],
-  providers: [AuthService],
+  controllers: [AuthController, MainCommentController, MainPostCOntriller, MainLikeController],
+  providers: [AuthService, MainCommentService, MainPostService, LikeMainService],
 })
 export class AppModule {}

@@ -20,13 +20,15 @@ export class CrudCommentService {
             content: data.content
         })
 
-        await this.repositoryComment.save(creationData)
+        const response = await this.repositoryComment.save(creationData)
+        console.log(response);
+        
         return new Empty()
     }
     
-    async updateComment(data: Pick<CommentEnity_Proto, 'content' | 'postId' | 'id'>): Promise<Empty> {
+    async updateComment(data: Pick<CommentEnity_Proto, 'content' | 'id'>): Promise<Empty> {
         let currentComent = await this.repositoryComment.findOneBy(
-            {id: data.id, postId: data.postId}
+            {id: data.id}
         )
 
         if (!currentComent) throw new BadRequestException('there is no comment with this id and post')
@@ -38,6 +40,8 @@ export class CrudCommentService {
     }
 
     async deleteComment(data: {id: number, postId: number}): Promise<Empty> {
+        console.log(data);
+        
         await this.repositoryComment.delete({
             id: data.id, postId: data.postId
         })

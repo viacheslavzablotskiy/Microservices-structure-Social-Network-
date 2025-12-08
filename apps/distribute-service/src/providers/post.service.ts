@@ -18,26 +18,32 @@ export class MainPostService implements OnModuleInit{
 
     async getInitialPostsData(): Promise<Post_Entity[]> {
         const response = await firstValueFrom(this.distPostService.getInitialPosts({})) ///there we need change
+        console.log(response);
+        
+        const {posts} = response
 
-        return response.map((post) => {
+        return response.posts ? posts.map((post) => {
             return {
                 ...post,
                 createdAt: convertTimeStampToDate(post.createdAt),
                 updatedAt: convertTimeStampToDate(post.updatedAt)
             }
-        })
+        }) : []
     }
 
     async getOtherPartOfData(data: {lastId: number}): Promise<Post_Entity[]> {
         const response = await firstValueFrom(this.distPostService.getSomePartPosts(data))
+        console.log(response);
+        
+        const {posts} = response
 
-        return response.map((post) => {
+        return response.posts ?posts.map((post) => {
             return {
                 ...post,
                 createdAt: convertTimeStampToDate(post.createdAt),
                 updatedAt: convertTimeStampToDate(post.updatedAt)
             }
-        })
+        }) : []
     }
 
     async creationNewPost(data: Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>) : Promise<Empty> {
@@ -45,7 +51,7 @@ export class MainPostService implements OnModuleInit{
         return new Empty()
     }
 
-    async updatePost(data: Partial<Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>>) : Promise<Empty> {
+    async updatePost(data: Partial<Omit<Post_Entity, 'createdAt' | 'updatedAt'>>) : Promise<Empty> {
         await firstValueFrom(this.distPostService.updatePost(data)) /// there we return Post_Entity_Proto
         return new Empty()
     }

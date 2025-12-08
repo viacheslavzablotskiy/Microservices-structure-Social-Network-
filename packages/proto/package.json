@@ -29,7 +29,8 @@
   },
   "dependencies": {
     "@nestjs/mapped-types": "*",
-    "@repo/static-data": "*"
+    "@repo/static-data": "1.0.0",
+    "@repo/user-interfaces": "1.0.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",

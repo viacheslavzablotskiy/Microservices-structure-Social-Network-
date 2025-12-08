@@ -58,6 +58,9 @@ export class UserService {
       relations: {user: true}
     })
 
+    console.log(currentSecurity);
+    
+
     console.log('we getting get you if thi ssuser is existing');
     
 
@@ -68,6 +71,9 @@ export class UserService {
       email: email,
       passwordHash: currentSecurity.passwordHash
     }
+
+    console.log(data);
+    
     return {
       ...data, role: entityToProto(data.role),
       createdAt: convertDateToTimeStamp(data

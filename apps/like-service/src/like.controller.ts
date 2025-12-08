@@ -4,6 +4,7 @@ import { GrpcMethod } from '@nestjs/microservices';
 import { Like_Proto_Entity } from '@repo/user-interfaces';
 import { Empty } from "google-protobuf/google/protobuf/empty_pb";
 
+
 @Controller()
 export class LikeController {
   constructor(private readonly likeService: LikeService) {}
@@ -18,4 +19,5 @@ export class LikeController {
     await this.likeService.deleteLike(data)
     return new Empty()
   }
+
 }

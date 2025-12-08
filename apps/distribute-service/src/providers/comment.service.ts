@@ -20,26 +20,33 @@ export class MainCommentService implements OnModuleInit{
 
     async getInitialCommentData(data: {postId: number}): Promise<CommentEntity[]> {
         const response = await firstValueFrom(this.distCommentService.getInitialCommentData(data))
+
+        const {comments} = response
+
+        console.log(comments);
         
-        return response.map((comment) => {
+        
+        return response.comments ? comments.map((comment) => {
             return {
                 ...comment,
                 createdAt: convertTimeStampToDate(comment.createdAt),
                 updatedAt: convertTimeStampToDate(comment.updatedAt)
             }
-        })
+        }) : []
     } 
 
     async getOtherPartOfData(data: {postId: number, lastId: number}) : Promise<CommentEntity[]> {
         const response = await firstValueFrom(this.distCommentService.getOtherCommentData(data))
 
-        return response.map((comment) => {
+        const {comments} = response
+
+        return response.comments ? comments.map((comment) => {
             return {
                 ...comment,
                 createdAt: convertTimeStampToDate(comment.createdAt),
                 updatedAt: convertTimeStampToDate(comment.updatedAt)
             }
-        })
+        }) : []
     }
 
     async creationNewComment(data: Pick<CommentEntity,'postId' | 'userId' | 'content'>) : Promise<Empty> {
@@ -47,12 +54,14 @@ export class MainCommentService implements OnModuleInit{
         return new Empty()
     }
 
-    async updationNewComment(data: Pick<CommentEntity, 'postId' | 'content' | 'id'>) : Promise<Empty> {
+    async updationNewComment(data: Pick<CommentEntity, 'content' | 'id'>) : Promise<Empty> {
         await firstValueFrom(this.distCommentService.updateComment(data))
         return new Empty()
     }
 
     async deleteComment(data: Pick<CommentEntity, 'id' | 'postId'>): Promise<Empty> {
+        console.log(data);
+        
         await firstValueFrom(this.distCommentService.deleteComment(data))
         return new Empty()
     }

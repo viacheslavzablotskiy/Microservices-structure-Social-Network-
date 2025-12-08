@@ -28,5 +28,25 @@ export class LikeService {
   async deleteLike(data: {id: number}): Promise<void> {
     await this.reposotoryLike.delete(data.id)
   }
+
+  // async creationOrDeleteLike(data: Omit<Like_Proto_Entity, 'createdAt' | 'id'>): Promise<ReturnLikeData> {
+  //   const currentLike = this.reposotoryLike.findOneBy({
+  //     userId: data.userId,
+  //     postId: data.postId
+  //   })
+
+  //   if (!currentLike) {
+  //     const createdData = this.reposotoryLike.create({
+  //       postId: data.postId,
+  //       userId: data.userId
+  //     })
+
+  //     const response = await this.reposotoryLike.save(createdData)
+  //     return {added: true, like: {...response, cre}}
+  //   } else {
+  //     this.reposotoryLike.delete({userId: data.userId, postId: data.postId})
+  //     return {added: false}
+  //   }
+  // }
   
 }

@@ -4,6 +4,7 @@ import { GrpcMethod } from '@nestjs/microservices';
 import { CommentEnity_Proto } from '@repo/user-interfaces';
 import { CrudCommentService } from './providers/crud.comment.service';
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
+import { ReturnCommentData } from '@repo/proto';
 
 @Controller()
 export class CommentController {
@@ -14,12 +15,12 @@ export class CommentController {
 
     
   @GrpcMethod('DistCommentService', 'GetInitialCommentData')
-  async getInitialCommentData(data: {postId: number}): Promise<CommentEnity_Proto[]> {
+  async getInitialCommentData(data: {postId: number}): Promise<ReturnCommentData> {
     return await this.commentService.getInitialCommentData(data)
   }
 
   @GrpcMethod('DistCommentService', 'GetOtherCommentData')
-  async getOtherCommentData(data: {postId: number, lastId: number}): Promise<CommentEnity_Proto[]> {
+  async getOtherCommentData(data: {postId: number, lastId: number}): Promise<ReturnCommentData> {
     return await this.commentService.getOtherPartComment(data)
   }
 
@@ -29,7 +30,7 @@ export class CommentController {
   }
 
   @GrpcMethod('DistCommentService', 'UpdateComment')
-  async updateComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'userId'>): Promise<Empty> {
+  async updateComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'userId' | 'postId'>): Promise<Empty> {
     return await this.crudCommentService.updateComment(data)
   }
 

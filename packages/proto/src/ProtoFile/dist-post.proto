@@ -41,6 +41,7 @@ message CreateNewPostData {
 
 
 message UpdatePostData {
+    optional int32 id = 1;
     optional int32 userId = 2;
     optional string title = 3;
     optional string imageUrl = 4;

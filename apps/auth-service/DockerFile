@@ -1,1 +1,33 @@
-FROM node:24.11.1
+FROM node:24.11.1 AS firststep
+
+WORKDIR /auth
+COPY . .
+RUN npm install -g turbo@latest
+RUN turbo prune auth-service --docker
+
+
+FROM node:24.11.1 AS secondstep
+
+WORKDIR /auth
+COPY --from=firststep /auth/out/json ./
+RUN npm ci
+
+
+FROM node:24.11.1 AS thirdstep
+
+WORKDIR /auth
+RUN npm install -g turbo@latest
+COPY --from=secondstep /auth/node_modules ./node_modules
+COPY --from=firststep /auth/out/full ./
+COPY --from=firststep /auth/out/json/package-lock.json ./
+RUN turbo run build --filter=@repo/*
+RUN turbo run build
+WORKDIR /auth/apps/auth-service
+RUN npm run build
+
+FROM node:24.11.1 AS fourthstep
+
+WORKDIR /auth
+COPY --from=thirdstep /auth/apps/auth-service/dist ./dist
+CMD [ "node", "dist/main.js" ]
+
