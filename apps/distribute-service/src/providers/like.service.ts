@@ -38,7 +38,7 @@ export class LikeMainService implements OnModuleInit{
         return new Empty()
     }
 
-    async deletingLikes(data: {id: number}): Promise<Empty> {
+    async deletingLikes(data: {postId: number, userId: number}): Promise<Empty> {
         await firstValueFrom(this.distLikeService.deleteLike(data))
         return new Empty()
     }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LikeEntity } from './entities/like.entity';
 import { Repository } from 'typeorm';
@@ -12,6 +12,14 @@ export class LikeService {
 
 
   async createNewLike(data: Omit<Like_Proto_Entity, 'createdAt' | 'id'>): Promise<Like_Proto_Entity> {
+
+    const validation = await this.reposotoryLike.findOne({
+      where: {postId: data.postId, userId: data.userId
+      }
+    })
+
+    if (validation) throw new BadRequestException('you have already like under this post') 
+
     const creationData = this.reposotoryLike.create({
       postId: data.postId,
       userId: data.userId
@@ -25,28 +33,17 @@ export class LikeService {
     }
   }
 
-  async deleteLike(data: {id: number}): Promise<void> {
-    await this.reposotoryLike.delete(data.id)
+  async deleteLike(data: {postId: number, userId: number}): Promise<void> {
+    const validation = await this.reposotoryLike.findOneBy({
+      postId: data.postId, userId: data.userId
+    })
+
+    console.log(validation);
+    
+
+    if (!validation) throw new BadRequestException('there is not any like that you want to delete')
+
+    await this.reposotoryLike.delete({postId: data.postId, userId: data.userId})
   }
-
-  // async creationOrDeleteLike(data: Omit<Like_Proto_Entity, 'createdAt' | 'id'>): Promise<ReturnLikeData> {
-  //   const currentLike = this.reposotoryLike.findOneBy({
-  //     userId: data.userId,
-  //     postId: data.postId
-  //   })
-
-  //   if (!currentLike) {
-  //     const createdData = this.reposotoryLike.create({
-  //       postId: data.postId,
-  //       userId: data.userId
-  //     })
-
-  //     const response = await this.reposotoryLike.save(createdData)
-  //     return {added: true, like: {...response, cre}}
-  //   } else {
-  //     this.reposotoryLike.delete({userId: data.userId, postId: data.postId})
-  //     return {added: false}
-  //   }
-  // }
   
 }

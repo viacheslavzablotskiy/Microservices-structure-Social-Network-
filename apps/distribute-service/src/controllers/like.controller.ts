@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Delete, Param, Req } from "@nestjs/common";
+import { Controller, Post, Body, UseGuards, Delete, Param, Req, UnauthorizedException } from "@nestjs/common";
 import {LikeMainService} from '../providers/like.service'
 import {CreationLikeSchema, type CreationLikeType, DeleteLikeSchema, type DeleteLikeType} from '@repo/user-interfaces'
 import { JWTAuthGuard, ZodValidationPipe } from "@repo/api";
@@ -19,22 +19,25 @@ export class MainLikeController {
     @ApiBody({type: CreationLikeDtoSwagger})
     @ApiNoContentResponse({description: 'you create like successfully'})
     async handleCreationNewLike(
+        @Req() req: Request,
         @Body(new ZodValidationPipe(CreationLikeSchema)) dto: CreationLikeType
     ): Promise<void> {
-        await this.likeMainService.creationNewLike(dto)
+        if (!req.user) throw new UnauthorizedException('you dont have accessToken') 
+
+        await this.likeMainService.creationNewLike({userId: req.user?.userId, postId: dto.postId})
     }
     
     @ApiBearerAuth('auth-part')
     @ApiCookieAuth()
     @UseGuards(JWTAuthGuard)
-    @Delete(':id')
+    @Delete(':postId')
     @ApiOperation({summary: 'cancel like', description: 'delete existing like'})
     @ApiNoContentResponse({description: 'your like succesfully deleted'})
     async handleDeleteLike(
-        @Param('id') id: string, @Req() req: Request
+        @Param('postId') postId: string, @Req() req: Request
     ) : Promise<void> {
-        console.log(req.user);
-        
-        await this.likeMainService.deletingLikes({id: Number(id)})
+        if (!req.user) throw new UnauthorizedException('you dont have accessToken')
+
+        await this.likeMainService.deletingLikes({postId: Number(postId), userId: req.user.userId})
     }
 }

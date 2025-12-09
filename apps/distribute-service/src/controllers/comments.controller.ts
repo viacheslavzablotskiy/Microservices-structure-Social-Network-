@@ -1,4 +1,4 @@
-import { Controller, Query, Get, BadRequestException, Param, Body, Post, UseGuards, Delete, Patch } from "@nestjs/common";
+import { Controller, Query, Get, BadRequestException, Param, Body, Post, UseGuards, Delete, Patch, Req, UnauthorizedException } from "@nestjs/common";
 import {MainCommentService} from '../providers/comment.service'
 import { JWTAuthGuard, ZodValidationPipe } from "@repo/api";
 import {CreationCommentSchema, type CreationCommentType, UpdatingCommentSchema,
@@ -7,6 +7,7 @@ import {CreationCommentSchema, type CreationCommentType, UpdatingCommentSchema,
 import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiNoContentResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CommentEntitySwagger, CreatioNcommentSwagger, DeleteCommentSwagger, UpdationCommentSwagger } from "src/documentation_classes/comments.swagger";
 import { UpdationPostSwagger } from "src/documentation_classes/post.swagger";
+import { type Request } from "express";
 
 @ApiTags('comments')
 @Controller('comments')
@@ -40,9 +41,12 @@ export class MainCommentController {
     @ApiBody({type: CreatioNcommentSwagger})
     @ApiNoContentResponse({description: 'you created comment successfully'})
     async hadleCreateNewComent(
+        @Req() req: Request,
         @Body(new ZodValidationPipe(CreationCommentSchema)) dto: CreationCommentType
     ) : Promise<void> {
-        await this.commentService.creationNewComment(dto)
+        if (!req.user) throw new UnauthorizedException('you dont have token (comment)')
+
+        await this.commentService.creationNewComment({...dto, userId: req.user?.userId})
     }
 
     @ApiBearerAuth('auth-part')
@@ -53,10 +57,12 @@ export class MainCommentController {
     @ApiBody({type: UpdationCommentSwagger})
     @ApiNoContentResponse({description: 'you update your comment successfully'})
     async handleUpdateComment(
+        @Req() req: Request,
         @Param('id') id: string,
         @Body(new ZodValidationPipe(UpdatingCommentSchema)) dto: UpdatingCommentType
     ): Promise<void> {
-        await this.commentService.updationNewComment({content: dto.content, id: Number(id)})
+        if (!req.user) throw new UnauthorizedException('you dont have the token')
+        await this.commentService.updationNewComment({content: dto.content, id: Number(id), userId: req.user.userId})
     }
 
     @ApiBearerAuth('auth-part')
@@ -67,11 +73,11 @@ export class MainCommentController {
     @ApiQuery({name: 'postId', type: String, required: true, description: 'for double validation'})
     @ApiNoContentResponse({description: 'you delete your comment successfully'})
     async handleDeleteComment(
-    @Param('id') id: string,
-    @Query('postId') postId: number
+    @Req() req: Request,
+    @Param('id') id: string
     ) : Promise<void> {
-        console.log(Number(id));
+        if (!req.user) throw new UnauthorizedException('you dont have the token')
         
-        await this.commentService.deleteComment({postId: Number(postId), id: Number(id)})
+        await this.commentService.deleteComment({userId: req.user.userId, id: Number(id)})
     }
 }

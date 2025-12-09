@@ -9,6 +9,8 @@ export interface DistPostService {
     getInitialPosts({}) : Observable<ReturnPostsDto>,
     getSomePartPosts(data: {lastId: number}) : Observable<ReturnPostsDto>
     createNewPost(data: CretionNewPost) : Observable<{}>
-    updatePost(data: Partial<Omit<Post_Enitity_Proto, 'createdAt' | 'updatedAt'>>) : Observable<Post_Enitity_Proto>,
-    deletePost(data: {id: number}) : Observable<{}>
+    updatePost(data: Partial<Omit<Post_Enitity_Proto, 'createdAt' | 'updatedAt' | 'id' | 'userId'>> 
+        & Pick<Post_Enitity_Proto, 'id' | 'userId'>
+    ) : Observable<Post_Enitity_Proto>,
+    deletePost(data: {id: number, userId: number}) : Observable<{}>
 }

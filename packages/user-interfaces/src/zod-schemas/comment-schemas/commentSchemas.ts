@@ -2,7 +2,6 @@ import z from "zod";
 
 
 export const CreationCommentSchema = z.object({
-    userId: z.number(),
     postId: z.number(),
     content: z.string()
 })

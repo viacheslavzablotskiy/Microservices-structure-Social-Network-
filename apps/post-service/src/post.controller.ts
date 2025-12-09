@@ -33,12 +33,18 @@ export class AppController {
   }
 
   @GrpcMethod('DistPostService', 'UpdatePost')
-  async updatePost(data: Partial<Omit<Post_Enitity_Proto, 'createdAt' | 'updatedAt'>>) : Promise<Post_Enitity_Proto> {
+  async updatePost(data: Partial<Omit<Post_Enitity_Proto, 'createdAt' | 'updatedAt' | 'id' | 'userId'>> 
+    & Pick<Post_Enitity_Proto, 'id' | 'userId'>
+  ) : Promise<Post_Enitity_Proto> {
+    console.log(data);
+    
     return await this.crudService.updatePost(data)
   }
 
   @GrpcMethod('DistPostService', 'DeletePost')
-  async deletePost(data: {id: number}): Promise<{}> {
+  async deletePost(data: {id: number, userId: number}): Promise<{}> {
+    console.log(data);
+    
     return await this.crudService.deletePost(data)
   }
   

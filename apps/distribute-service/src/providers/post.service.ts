@@ -51,12 +51,14 @@ export class MainPostService implements OnModuleInit{
         return new Empty()
     }
 
-    async updatePost(data: Partial<Omit<Post_Entity, 'createdAt' | 'updatedAt'>>) : Promise<Empty> {
+    async updatePost(data: Partial<Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'userId' | 'id'>>
+        & Pick<Post_Entity, 'id' | 'userId'>
+    ) : Promise<Empty> {
         await firstValueFrom(this.distPostService.updatePost(data)) /// there we return Post_Entity_Proto
         return new Empty()
     }
 
-    async deletePost(data: {id: number}): Promise<Empty> {
+    async deletePost(data: {id: number, userId: number}): Promise<Empty> {
         await firstValueFrom(this.distPostService.deletePost(data)) /// there we need add RabbitMq method to delete all comments and likes
         /// via async, and fire-forget
         return new Empty()

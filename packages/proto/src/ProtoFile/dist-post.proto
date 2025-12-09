@@ -41,8 +41,8 @@ message CreateNewPostData {
 
 
 message UpdatePostData {
-    optional int32 id = 1;
-    optional int32 userId = 2;
+    int32 id = 1;
+    int32 userId = 2;
     optional string title = 3;
     optional string imageUrl = 4;
     optional string content = 5;
@@ -50,5 +50,6 @@ message UpdatePostData {
 
 message DeletePostData {
     int32 id = 1;
+    int32 userId = 2;
 }
 

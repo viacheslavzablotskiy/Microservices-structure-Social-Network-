@@ -15,7 +15,7 @@ export class LikeController {
   }
   
   @GrpcMethod('DistLikeService', 'DeleteLike')
-  async deleteLike(data: {id: number}) : Promise<Empty> {
+  async deleteLike(data: {postId: number, userId: number}) : Promise<Empty> {
     await this.likeService.deleteLike(data)
     return new Empty()
   }

@@ -54,12 +54,12 @@ export class MainCommentService implements OnModuleInit{
         return new Empty()
     }
 
-    async updationNewComment(data: Pick<CommentEntity, 'content' | 'id'>) : Promise<Empty> {
+    async updationNewComment(data: Pick<CommentEntity, 'content' | 'id' | 'userId'>) : Promise<Empty> {
         await firstValueFrom(this.distCommentService.updateComment(data))
         return new Empty()
     }
 
-    async deleteComment(data: Pick<CommentEntity, 'id' | 'postId'>): Promise<Empty> {
+    async deleteComment(data: Pick<CommentEntity, 'id' | 'userId'>): Promise<Empty> {
         console.log(data);
         
         await firstValueFrom(this.distCommentService.deleteComment(data))

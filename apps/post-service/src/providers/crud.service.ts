@@ -28,24 +28,40 @@ export class CrudService  {
         return new Empty()
     }
 
-    async updatePost(data: Partial<Omit<Post_Enitity_Proto, 'createdAt' | 'updatedAt'>>): Promise<Post_Enitity_Proto> {
-        const {id, ...otherData} = data
+    async updatePost(data: Partial<Omit<Post_Enitity_Proto, 'createdAt' | 'updatedAt' | 'id' | 'userId'>>
+        & Pick<Post_Enitity_Proto, 'id' | 'userId'>
+    ): Promise<Post_Enitity_Proto> {
+        const {id, userId, ...otherData} = data
 
         if (!id) throw new BadRequestException('in this data we dotn convey id')
+        
+        const currentPost = await this.repositoryPost.findOneBy({id: id})
+        console.log(currentPost);
+        
 
-        await this.repositoryPost.update(id, otherData)
+        if (!currentPost ||
+            currentPost?.userId !== userId)
+            throw new BadRequestException('you dont have permission or we dont have post with this id')
 
-        const reponse = await this.repositoryPost.findOneBy({
-            id: id
-        })
+        Object.assign(currentPost, otherData)
 
-        if (!reponse) throw new BadRequestException('we dont have post with that id')
+        console.log(currentPost);
+        
 
-        return convertFromPostToProto(reponse)
+        const resultPost = await this.repositoryPost.save(currentPost)
+
+        return convertFromPostToProto(resultPost)
 
     }
 
-    async deletePost(data: {id: number}): Promise<Empty> {
+    async deletePost(data: {id: number, userId: number}): Promise<Empty> {
+        
+        const validation = await this.repositoryPost.findOneBy({
+            id: data.id, userId: data.userId
+        })
+
+        if (!validation) throw new BadRequestException('you dont have the permission or we dont have this post')
+
         await this.repositoryPost.delete(data.id)
         return new Empty()
     }

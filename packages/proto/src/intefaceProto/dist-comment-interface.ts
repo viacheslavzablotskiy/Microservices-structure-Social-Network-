@@ -9,6 +9,6 @@ export interface DistCommentService {
     getInitialCommentData(data: {postId: number}) : Observable<ReturnCommentData>,
     getOtherCommentData(data: {postId: number, lastId: number}) : Observable<ReturnCommentData>,
     createNewComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'id'>) : Observable<{}>,
-    updateComment(data:  Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'userId' | 'postId'>) : Observable<{}>,
-    deleteComment(data: {postId: number, id: number}) : Observable<{}>
+    updateComment(data:  Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'postId'>) : Observable<{}>,
+    deleteComment(data: {userId: number, id: number}) : Observable<{}>
 }

@@ -5,5 +5,5 @@ import { Observable } from 'rxjs'
 
 export interface DistLikeService {
     createNewLike(data: Omit<Like_Proto_Entity, 'createdAt' | 'id'>) : Observable<Like_Proto_Entity>,
-    deleteLike(data: {id: number}) : Observable<{}>
+    deleteLike(data: {postId: number, userId: number}) : Observable<{}>
 }

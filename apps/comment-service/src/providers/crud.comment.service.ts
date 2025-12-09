@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotAcceptableException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { CommentEnity_Proto } from "@repo/user-interfaces";
 import { CommentEnity } from "src/entitis/comment.entity";
@@ -26,12 +26,17 @@ export class CrudCommentService {
         return new Empty()
     }
     
-    async updateComment(data: Pick<CommentEnity_Proto, 'content' | 'id'>): Promise<Empty> {
+    async updateComment(data: Pick<CommentEnity_Proto, 'content' | 'id' | 'userId' >): Promise<Empty> {
         let currentComent = await this.repositoryComment.findOneBy(
             {id: data.id}
         )
+        
+        if (!currentComent) throw new BadRequestException('there is no comment with this id and post') 
+        
+        console.log(currentComent.userId === data.userId);
+        
 
-        if (!currentComent) throw new BadRequestException('there is no comment with this id and post')
+        if (currentComent.userId !== data.userId) throw new NotAcceptableException('you dont have permission to delete this')
         
         currentComent.content = data.content
 
@@ -39,11 +44,16 @@ export class CrudCommentService {
         return new Empty()
     }
 
-    async deleteComment(data: {id: number, postId: number}): Promise<Empty> {
-        console.log(data);
+    async deleteComment(data: {id: number, userId: number}): Promise<Empty> {
+        
+        const validation = await this.repositoryComment.findOneBy({
+            userId: data.userId, id: data.id
+        })
+
+        if (!validation) throw new BadRequestException('there is not comment or you dont have permission')
         
         await this.repositoryComment.delete({
-            id: data.id, postId: data.postId
+            id: data.id, userId: data.userId
         })
         return new Empty()
     }
