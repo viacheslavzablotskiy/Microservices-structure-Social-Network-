@@ -8,7 +8,7 @@ import "google/protobuf/timestamp.proto";
 service DistPostService {
     rpc GetInitialPosts (google.protobuf.Empty) returns (InitialPosts);
     rpc GetSomePartPosts (MoreThanId) returns (InitialPosts);
-    rpc CreateNewPost (CreateNewPostData) returns (google.protobuf.Empty);
+    rpc CreateNewPost (CreateNewPostData) returns (PostProto);
     rpc UpdatePost (UpdatePostData) returns (PostProto);
     rpc DeletePost (DeletePostData) returns (google.protobuf.Empty);
 }

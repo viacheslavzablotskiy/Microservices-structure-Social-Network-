@@ -2,7 +2,8 @@ import { Controller, Post, Get, Query, Body, UseGuards, Patch, Delete, Param, Re
 import {MainPostService} from '../providers/post.service'
 import { JWTAuthGuard, ZodValidationPipe } from "@repo/api";
 import {CreationPostDataSchema, type CreationPostDataType, UpdatetingPostDataSchema,
-     type UpdatePostDataType, DeletePostDataSchema, type DeletePostDataType} from '@repo/user-interfaces'
+     type UpdatePostDataType, DeletePostDataSchema, type DeletePostDataType,
+     Post_Entity} from '@repo/user-interfaces'
 import { ApiBody, ApiCreatedResponse, ApiNoContentResponse, ApiNotAcceptableResponse, ApiOkResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiBearerAuth, ApiCookieAuth } from "@nestjs/swagger";
 import { CretionNewPostSwagger, DeletePostSwagger, Post_Entity_Swagger, UpdationPostSwagger } from "src/documentation_classes/post.swagger";
 import { type Request } from "express";
@@ -41,10 +42,10 @@ export class MainPostCOntriller {
     async handleCreateNewPost(
         @Req() req: Request,
         @Body(new ZodValidationPipe(CreationPostDataSchema)) dto: CreationPostDataType
-    ) : Promise<void> {
+    ) : Promise<Post_Entity> {
         if (!req.user) throw new UnauthorizedException('you dont have the token')
             
-        await this.postService.creationNewPost({...dto, userId: req.user.userId})
+        return await this.postService.creationNewPost({...dto, userId: req.user.userId})
     }
 
     @ApiCookieAuth()
@@ -58,13 +59,13 @@ export class MainPostCOntriller {
         @Req() req: Request,
         @Param("id") id: string,
         @Body(new ZodValidationPipe(UpdatetingPostDataSchema)) dto: UpdatePostDataType
-    ): Promise<void> {
+    ): Promise<Post_Entity> {
         if (!req.user) throw new UnauthorizedException('you dont have token (post)')
 
         console.log(dto);
         
 
-        await this.postService.updatePost({...dto, id: Number(id), userId: req.user.userId})
+        return await this.postService.updatePost({...dto, id: Number(id), userId: req.user.userId})
     }
 
     @ApiCookieAuth()

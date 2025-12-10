@@ -32,12 +32,12 @@ import {CachePackageMdoule} from '@repo/chache-package'
         logging: true
       })
     }),
-    // CachePackageMdoule.registerAsync({
-    //   inject: [ConfigService],
-    //   useFactory: (config: ConfigService) => ({
-    //     REDIS_URL: config.get<string>('REDIS_URL_PATH') || ''
-    //   })
-    // })
+    CachePackageMdoule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        REDIS_URL: config.get<string>('REDIS_URL_PATH') || ''
+      })
+    })
   ],
   controllers: [AppController],
   providers: [UserService],

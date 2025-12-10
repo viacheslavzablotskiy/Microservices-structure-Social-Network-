@@ -43,10 +43,10 @@ export class MainCommentController {
     async hadleCreateNewComent(
         @Req() req: Request,
         @Body(new ZodValidationPipe(CreationCommentSchema)) dto: CreationCommentType
-    ) : Promise<void> {
+    ) : Promise<CommentEntity> {
         if (!req.user) throw new UnauthorizedException('you dont have token (comment)')
 
-        await this.commentService.creationNewComment({...dto, userId: req.user?.userId})
+        return await this.commentService.creationNewComment({...dto, userId: req.user?.userId})
     }
 
     @ApiBearerAuth('auth-part')
@@ -60,9 +60,9 @@ export class MainCommentController {
         @Req() req: Request,
         @Param('id') id: string,
         @Body(new ZodValidationPipe(UpdatingCommentSchema)) dto: UpdatingCommentType
-    ): Promise<void> {
+    ): Promise<CommentEntity> {
         if (!req.user) throw new UnauthorizedException('you dont have the token')
-        await this.commentService.updationNewComment({content: dto.content, id: Number(id), userId: req.user.userId})
+        return await this.commentService.updationNewComment({content: dto.content, id: Number(id), userId: req.user.userId})
     }
 
     @ApiBearerAuth('auth-part')

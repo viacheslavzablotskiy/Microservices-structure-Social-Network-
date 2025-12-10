@@ -5,6 +5,7 @@ import { CrudCommentService } from './providers/crud.comment.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import {TypeOrmModule} from '@nestjs/typeorm'
 import { CommentEnity } from './entitis/comment.entity';
+import {CachePackageMdoule} from "@repo/chache-package"
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -23,6 +24,12 @@ import { CommentEnity } from './entitis/comment.entity';
         migrationsTableName: '_migrationsComment',
         synchronize: false,
         logging: true
+      })
+    }),
+    CachePackageMdoule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        REDIS_URL: config.get<string>('REDIS_URL_PATH') || ''
       })
     })
   ],

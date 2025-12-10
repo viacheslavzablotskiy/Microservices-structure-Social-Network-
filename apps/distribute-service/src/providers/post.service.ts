@@ -46,16 +46,24 @@ export class MainPostService implements OnModuleInit{
         }) : []
     }
 
-    async creationNewPost(data: Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>) : Promise<Empty> {
-        await firstValueFrom(this.distPostService.createNewPost(data))
-        return new Empty()
+    async creationNewPost(data: Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>) : Promise<Post_Entity> {
+        const response = await firstValueFrom(this.distPostService.createNewPost(data))
+        return {
+            ...response,
+            createdAt: convertTimeStampToDate(response.createdAt),
+            updatedAt: convertTimeStampToDate(response.updatedAt)
+        }
     }
 
     async updatePost(data: Partial<Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'userId' | 'id'>>
         & Pick<Post_Entity, 'id' | 'userId'>
-    ) : Promise<Empty> {
-        await firstValueFrom(this.distPostService.updatePost(data)) /// there we return Post_Entity_Proto
-        return new Empty()
+    ) : Promise<Post_Entity> {
+        const response = await firstValueFrom(this.distPostService.updatePost(data)) /// there we return Post_Entity_Proto
+        return {
+            ...response,
+            createdAt: convertTimeStampToDate(response.createdAt),
+            updatedAt: convertTimeStampToDate(response.updatedAt)
+        }
     }
 
     async deletePost(data: {id: number, userId: number}): Promise<Empty> {

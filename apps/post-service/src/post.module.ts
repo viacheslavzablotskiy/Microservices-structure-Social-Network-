@@ -5,6 +5,7 @@ import { CrudService } from './providers/crud.service';
 import {ConfigModule, ConfigService} from '@nestjs/config'
 import {TypeOrmModule} from '@nestjs/typeorm'
 import { PostEntity } from './entities/post.entity';
+import { CachePackageMdoule } from '@repo/chache-package'
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -23,6 +24,12 @@ import { PostEntity } from './entities/post.entity';
         migrationsTableName: '_migrationsPost',
         synchronize: false,
         logging: true
+      })
+    }),
+    CachePackageMdoule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        REDIS_URL: config.get<string>('REDIS_URL_PATH') || ''
       })
     })
   ],

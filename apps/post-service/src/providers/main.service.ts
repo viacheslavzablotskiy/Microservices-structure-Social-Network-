@@ -5,21 +5,31 @@ import { PostEntity } from '../entities/post.entity';
 import { MoreThan, Repository } from 'typeorm';
 import {convertFromPostToProto} from '../utils/convertToProto'
 import { ReturnPostsDto } from '@repo/proto';
+import { CacheService } from '@repo/chache-package'; 
 
 @Injectable()
 export class PostService {
   constructor(
     @InjectRepository(PostEntity)
-    private readonly repositoryPost: Repository<PostEntity>
+    private readonly repositoryPost: Repository<PostEntity>,
+    private readonly cacheService: CacheService
   ) {}
  
   async getInitialState(): Promise<ReturnPostsDto> {
+    const cacheKey = `post:page:1`
+    const cached: Post_Enitity_Proto[] | undefined = await this.cacheService.get(cacheKey)
+
+    if (cached) {
+      return {posts: cached}
+    }
     const inital_part_posts = await this.repositoryPost.find({
-      order: {id: 'ASC'},
+      order: {id: 'DESC'},
       take: 20
     })
 
     const posts = inital_part_posts.map((port) => convertFromPostToProto(port))
+
+    await this.cacheService.set(cacheKey, posts, 60_000)
     
     return {posts: posts}
   }

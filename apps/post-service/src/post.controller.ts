@@ -28,7 +28,7 @@ export class AppController {
   }
 
   @GrpcMethod('DistPostService', 'CreateNewPost')
-  async createNewPost(data: CretionNewPost): Promise<{}> {
+  async createNewPost(data: CretionNewPost): Promise<Post_Enitity_Proto> {
     return await this.crudService.handleNewPost(data)
   }
 

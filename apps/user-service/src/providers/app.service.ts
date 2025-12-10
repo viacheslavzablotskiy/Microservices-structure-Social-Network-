@@ -5,6 +5,7 @@ import { DataSource, Repository } from 'typeorm';
 import {type RegisterSchemaUser, type LoginScemaUser} from '@repo/user-interfaces'
 import { UserSecurityEntity } from 'src/entities/user.security.entity';
 import { User_Entity_After_Proto_UserId, entityToProto, User_Entity_After_Proto_UserEmail, convertDateToTimeStamp, convertTimeStampToDate} from '@repo/proto';
+import { CacheService } from '@repo/chache-package';
 
 @Injectable()
 export class UserService {
@@ -16,15 +17,10 @@ export class UserService {
     private readonly repositorySecurity: Repository<UserSecurityEntity>,
     @InjectRepository(UserEntity)
     private readonly repository: Repository<UserEntity>,
+    private readonly cacheService: CacheService
   ) {}
 
   async handleCreationdNewUser(dto: RegisterSchemaUser): Promise<void> {
-
-    console.log('we almost create new user, we at the stage of add to database');
-
-    console.log(dto);
-    
-    
 
     await this.dataSource.transaction(async (manager) => {
       const security = manager.create(UserSecurityEntity, {
@@ -53,16 +49,26 @@ export class UserService {
 
 
   async handleLoginExistingUser(email: string): Promise<User_Entity_After_Proto_UserEmail> {
+    const cacheKey = `email:${email}`
+
+    const cached: UserEntity & {email: string, passwordHash: string} | undefined  = await this.cacheService.get(cacheKey)
+
+    if (cached) {
+      console.log(cached);
+      
+      return {
+      ...cached, role: entityToProto(cached.role),
+      createdAt: convertDateToTimeStamp(new Date(cached.createdAt)),
+      updatedAt: convertDateToTimeStamp(new Date(cached.updatedAt))
+      }
+    }
+
     const currentSecurity = await this.repositorySecurity.findOne({
       where: {email: email},
       relations: {user: true}
     })
 
     console.log(currentSecurity);
-    
-
-    console.log('we getting get you if thi ssuser is existing');
-    
 
     if (!currentSecurity) throw new UnauthorizedException('There is not User with this email')
 
@@ -72,23 +78,43 @@ export class UserService {
       passwordHash: currentSecurity.passwordHash
     }
 
+    this.cacheService.set(`email:${email}`, {
+      ...data, createdAt: data.createdAt.toISOString(),
+      updatedAt: data.createdAt.toISOString()
+    }, 0)
+
     console.log(data);
     
     return {
       ...data, role: entityToProto(data.role),
-      createdAt: convertDateToTimeStamp(data
-        .createdAt
-      ),
+      createdAt: convertDateToTimeStamp(data.createdAt),
       updatedAt: convertDateToTimeStamp(data.updatedAt)
     }
   }
 
   async handleGetUserById(userId: number) : Promise<User_Entity_After_Proto_UserId> {
+    const cacheKey = `userId:${userId}`
+    const cached: UserEntity | undefined = await this.cacheService.get(cacheKey)
+
+    if (cached) {
+      return {
+      ...cached,
+      role: entityToProto(cached.role),
+      createdAt: convertDateToTimeStamp(new Date(cached.createdAt)),
+      updatedAt: convertDateToTimeStamp(new Date(cached.updatedAt))
+    }
+    }
+
     const currenAuthUser = await this.repository.findOne({
       where: {id: userId}
     })
 
     if (!currenAuthUser) throw new UnauthorizedException('There is not User with this id')
+
+    this.cacheService.set(`userId:${userId}`, {
+      ...currenAuthUser, createdAt: currenAuthUser.createdAt.toISOString(),
+      updatedAt: currenAuthUser.updatedAt.toISOString()
+    })
 
     return {
       ...currenAuthUser,

@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from "@nestjs/common";
 import { type ClientGrpc } from "@nestjs/microservices";
-import {convertTimeStampToDate, DistCommentService} from '@repo/proto'
+import {convertDateToTimeStamp, convertTimeStampToDate, DistCommentService} from '@repo/proto'
 import { CommentEntity } from "@repo/user-interfaces";
 import { firstValueFrom } from "rxjs";
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
@@ -49,14 +49,22 @@ export class MainCommentService implements OnModuleInit{
         }) : []
     }
 
-    async creationNewComment(data: Pick<CommentEntity,'postId' | 'userId' | 'content'>) : Promise<Empty> {
-        await firstValueFrom(this.distCommentService.createNewComment(data))
-        return new Empty()
+    async creationNewComment(data: Pick<CommentEntity,'postId' | 'userId' | 'content'>) : Promise<CommentEntity> {
+        const response = await firstValueFrom(this.distCommentService.createNewComment(data))
+        return {
+            ...response,
+            createdAt: convertTimeStampToDate(response.createdAt),
+            updatedAt: convertTimeStampToDate(response.updatedAt)
+        }
     }
 
-    async updationNewComment(data: Pick<CommentEntity, 'content' | 'id' | 'userId'>) : Promise<Empty> {
-        await firstValueFrom(this.distCommentService.updateComment(data))
-        return new Empty()
+    async updationNewComment(data: Pick<CommentEntity, 'content' | 'id' | 'userId'>) : Promise<CommentEntity> {
+        const response = await firstValueFrom(this.distCommentService.updateComment(data))
+        return {
+            ...response,
+            createdAt: convertTimeStampToDate(response.createdAt),
+            updatedAt: convertTimeStampToDate(response.updatedAt)
+        }
     }
 
     async deleteComment(data: Pick<CommentEntity, 'id' | 'userId'>): Promise<Empty> {

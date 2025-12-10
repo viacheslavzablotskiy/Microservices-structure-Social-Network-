@@ -5,6 +5,7 @@ import {CretionNewPost, Post_Enitity_Proto} from '@repo/user-interfaces'
 import { Repository } from "typeorm";
 import convertFromPostToProto from "src/utils/convertToProto";
 import { Empty } from "google-protobuf/google/protobuf/empty_pb";
+import { convertDateToTimeStamp } from "@repo/proto";
 
 
 @Injectable()
@@ -15,17 +16,16 @@ export class CrudService  {
         private readonly repositoryPost: Repository<PostEntity>
     ) {}
 
-    async handleNewPost(data: CretionNewPost): Promise<Empty> {
+    async handleNewPost(data: CretionNewPost): Promise<Post_Enitity_Proto> {
         const creationData = this.repositoryPost.create({
             userId: data.userId,
             title: data.title,
             imageUrl: data.imageUrl,
             content: data.content
         })
-
-        await this.repositoryPost.save(creationData)
-
-        return new Empty()
+        const response = await this.repositoryPost.save(creationData)
+        
+        return convertFromPostToProto(response)
     }
 
     async updatePost(data: Partial<Omit<Post_Enitity_Proto, 'createdAt' | 'updatedAt' | 'id' | 'userId'>>

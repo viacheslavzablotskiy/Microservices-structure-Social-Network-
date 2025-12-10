@@ -9,8 +9,8 @@ import "google/protobuf/timestamp.proto";
 service DistCommentService {
     rpc GetInitialCommentData (CommentPostId) returns (ListComments);
     rpc GetOtherCommentData (CommentPostIdAndId) returns (ListComments);
-    rpc CreateNewComment (CreateNewCommentData) returns (google.protobuf.Empty);
-    rpc UpdateComment (UpdateCommentData) returns (google.protobuf.Empty);
+    rpc CreateNewComment (CreateNewCommentData) returns (CommentProto);
+    rpc UpdateComment (UpdateCommentData) returns (CommentProto);
     rpc DeleteComment (DeleteCommentData) returns (google.protobuf.Empty);
 }
 

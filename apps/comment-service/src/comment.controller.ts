@@ -25,12 +25,12 @@ export class CommentController {
   }
 
   @GrpcMethod('DistCommentService', 'CreateNewComment')
-  async createNewComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'id'>) : Promise<Empty> {
+  async createNewComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'id'>) : Promise<CommentEnity_Proto> {
     return await this.crudCommentService.createNewComment(data)
   }
 
   @GrpcMethod('DistCommentService', 'UpdateComment')
-  async updateComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'postId'>): Promise<Empty> {
+  async updateComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'postId'>): Promise<CommentEnity_Proto> {
     return await this.crudCommentService.updateComment(data)
   }
 
