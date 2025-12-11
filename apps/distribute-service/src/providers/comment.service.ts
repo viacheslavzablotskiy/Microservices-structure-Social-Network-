@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from "@nestjs/common";
 import { type ClientGrpc } from "@nestjs/microservices";
-import {convertDateToTimeStamp, convertTimeStampToDate, DistCommentService} from '@repo/proto'
+import {CommentReturnCount, convertDateToTimeStamp, convertTimeStampToDate, DistCommentService} from '@repo/proto'
 import { CommentEntity } from "@repo/user-interfaces";
 import { firstValueFrom } from "rxjs";
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
@@ -23,7 +23,6 @@ export class MainCommentService implements OnModuleInit{
 
         const {comments} = response
 
-        console.log(comments);
         
         
         return response.comments ? comments.map((comment) => {
@@ -72,5 +71,9 @@ export class MainCommentService implements OnModuleInit{
         
         await firstValueFrom(this.distCommentService.deleteComment(data))
         return new Empty()
+    }
+
+    async getCountofComment(postIds: number[]): Promise<CommentReturnCount> {
+        return await firstValueFrom(this.distCommentService.getCountofLike({postIds: postIds}))
     }
 }

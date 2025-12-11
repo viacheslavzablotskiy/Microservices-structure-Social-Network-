@@ -4,7 +4,7 @@ import { CommentEnity } from 'src/entitis/comment.entity';
 import { MoreThan, Repository } from 'typeorm';
 import {CommentEnity_Proto} from '@repo/user-interfaces'
 import {convertCommentToProtoComment} from '../utils/convertCommentToProto'
-import { ReturnCommentData } from '@repo/proto';
+import { CommentReturnCount, ReturnCommentData } from '@repo/proto';
 import { CacheService } from '@repo/chache-package';
 
 @Injectable()
@@ -60,5 +60,36 @@ export class CommentService {
 
       return {comments: response}
     }
+    
 
+    async getCountofComment(postIds: number[]): Promise<CommentReturnCount> {
+
+      const result = await Promise.all(
+        postIds.map(async (postId) => {
+          const cacheKey = `postId:${postId}:comment:count`
+          const cached: number | undefined = await this.cacheService.get(cacheKey)
+
+          if (cached !== undefined) {
+            return {postId: postId, count: cached}
+          } else {
+            const response = await this.repositoryComment.find({
+              where: {postId: postId}
+            })
+            const count = response.length
+            await this.cacheService.set(cacheKey, count, 0)
+            return {postId: postId, count: count}
+          }
+        })
+      )
+
+      const resultObject: Record<number, number> = {};
+      result.forEach(({postId, count}) => {
+          resultObject[postId] = count
+      })
+
+      console.log(resultObject);
+      
+
+      return {comments: resultObject}
+    }
 }

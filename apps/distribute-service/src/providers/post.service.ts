@@ -1,47 +1,75 @@
 import { Inject, Injectable, OnModuleInit } from "@nestjs/common";
 import { type ClientGrpc } from "@nestjs/microservices";
 import {convertTimeStampToDate, DistPostService} from '@repo/proto'
-import { Post_Entity } from "@repo/user-interfaces";
+import { Post_Entity, RetrunPostEntity } from "@repo/user-interfaces";
 import { firstValueFrom } from "rxjs";
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
+import { MainCommentService } from "./comment.service";
+import { LikeMainService } from "./like.service";
 
 @Injectable()
 export class MainPostService implements OnModuleInit{
     private distPostService: DistPostService
 
-    constructor(@Inject('DIST-POST-PATH') private client: ClientGrpc) {}
+    constructor(
+        @Inject('DIST-POST-PATH') private client: ClientGrpc,
+        private readonly mainCommentService: MainCommentService,
+        private readonly likeService: LikeMainService
+    ) {}
 
     onModuleInit() {
         this.distPostService = this.client.getService<DistPostService>('DistPostService')
     }
 
 
-    async getInitialPostsData(): Promise<Post_Entity[]> {
+    async getInitialPostsData(reqUser: number): Promise<RetrunPostEntity[]> {
         const response = await firstValueFrom(this.distPostService.getInitialPosts({})) ///there we need change
         console.log(response);
-        
         const {posts} = response
+
+        const postIds = posts.map(post => post.id)
+
+        const commentObject = await this.mainCommentService.getCountofComment(postIds)
+        const {comments} = commentObject
+        console.log(commentObject);
+
+        const likeObject = await this.likeService.likeCountOfPost(postIds, reqUser)
+        const {likes} = likeObject 
+        console.log(likeObject);
 
         return response.posts ? posts.map((post) => {
             return {
                 ...post,
                 createdAt: convertTimeStampToDate(post.createdAt),
-                updatedAt: convertTimeStampToDate(post.updatedAt)
+                updatedAt: convertTimeStampToDate(post.updatedAt),
+                likeCOunt: likes[post.id].like,
+                countComent: comments[post.id],
+                isLiked: likes[post.id].isLiked
             }
         }) : []
     }
 
-    async getOtherPartOfData(data: {lastId: number}): Promise<Post_Entity[]> {
+    async getOtherPartOfData(data: {lastId: number, reqUser: number}): Promise<RetrunPostEntity[]> {
         const response = await firstValueFrom(this.distPostService.getSomePartPosts(data))
         console.log(response);
-        
         const {posts} = response
+
+        const postIds = posts.map(post => post.id)
+
+        const commentObject = await this.mainCommentService.getCountofComment(postIds)
+        const {comments} = commentObject
+
+        const likeObject = await this.likeService.likeCountOfPost(postIds, data.reqUser)
+        const {likes} = likeObject
 
         return response.posts ?posts.map((post) => {
             return {
                 ...post,
                 createdAt: convertTimeStampToDate(post.createdAt),
-                updatedAt: convertTimeStampToDate(post.updatedAt)
+                updatedAt: convertTimeStampToDate(post.updatedAt),
+                likeCOunt: likes[post.id].like,
+                isLiked: likes[post.id].isLiked,
+                countComent: comments[post.id]
             }
         }) : []
     }

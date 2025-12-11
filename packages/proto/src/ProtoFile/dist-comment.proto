@@ -12,6 +12,7 @@ service DistCommentService {
     rpc CreateNewComment (CreateNewCommentData) returns (CommentProto);
     rpc UpdateComment (UpdateCommentData) returns (CommentProto);
     rpc DeleteComment (DeleteCommentData) returns (google.protobuf.Empty);
+    rpc GetCountofLike (GetidsPosts) returns (ReturnCountComment);
 }
 
 
@@ -55,4 +56,13 @@ message UpdateCommentData {
 message DeleteCommentData {
     int32 id = 1;
     int32 userId = 2;
+}
+
+
+message GetidsPosts {
+    repeated int32 postIds = 1;
+}
+
+message ReturnCountComment {
+    map<int32, int32> comments = 1;
 }

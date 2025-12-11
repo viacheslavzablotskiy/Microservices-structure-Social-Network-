@@ -22,13 +22,16 @@ export class MainPostCOntriller {
     @ApiQuery({name: 'after', type: String, required: false, description: 'id last post'})
     @ApiOkResponse({type: Post_Entity_Swagger, isArray: true, description: 'you got this data'})
     async getInitialOrSomeData(
+        @Req() req: Request,
         @Query('after') after?: string
     ) {
+        if (!req.user) throw new UnauthorizedException('YOU DONT HAVE PERMISSION')
+
         if (!after) {
-            return await this.postService.getInitialPostsData()
+            return await this.postService.getInitialPostsData(req.user.userId)
         } 
         else {
-            return await this.postService.getOtherPartOfData({lastId: Number(after)})
+            return await this.postService.getOtherPartOfData({lastId: Number(after), reqUser: req.user.userId})
         }
     }
 

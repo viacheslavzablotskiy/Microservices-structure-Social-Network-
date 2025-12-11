@@ -3,6 +3,7 @@ import { LikeService } from './like.service';
 import { GrpcMethod } from '@nestjs/microservices';
 import { Like_Proto_Entity } from '@repo/user-interfaces';
 import { Empty } from "google-protobuf/google/protobuf/empty_pb";
+import { ReturnLikeCountData } from '@repo/proto';
 
 
 @Controller()
@@ -20,4 +21,9 @@ export class LikeController {
     return new Empty()
   }
 
+
+  @GrpcMethod('DistLikeService', 'GetCountOfLike')
+  async getCountofLikes(data: {postIds: number[], reqUser: number}): Promise<ReturnLikeCountData> {
+    return await this.likeService.countLikesOfPost(data.postIds, data.reqUser)
+  }
 }

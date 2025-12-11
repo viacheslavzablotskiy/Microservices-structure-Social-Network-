@@ -4,6 +4,7 @@ import { LikeService } from './like.service';
 import {ConfigModule, ConfigService} from '@nestjs/config'
 import {TypeOrmModule} from '@nestjs/typeorm'
 import { LikeEntity } from './entities/like.entity';
+import {CachePackageMdoule} from '@repo/chache-package'
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -22,6 +23,12 @@ import { LikeEntity } from './entities/like.entity';
         migrationsTableName: '_migrationsLike',
         synchronize: false,
         logging: true
+      })
+    }),
+    CachePackageMdoule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        REDIS_URL: config.get<string>('REDIS_URL_PATH') || '' 
       })
     })
   ],

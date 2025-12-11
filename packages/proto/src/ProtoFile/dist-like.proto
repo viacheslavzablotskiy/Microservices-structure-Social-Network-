@@ -9,6 +9,7 @@ import "google/protobuf/timestamp.proto";
 service DistLikeService {
     rpc createNewLike (CreationData) returns (OutputData);
     rpc DeleteLike (GetIdForLike) returns (google.protobuf.Empty);
+    rpc GetCountOfLike(GetPostIds) returns (ReturnLikeDataCount);
 }
 
 
@@ -27,4 +28,18 @@ message OutputData {
 message GetIdForLike {
     int32 postId = 1;
     int32 userId = 2;
+}
+
+message GetPostIds {
+    repeated int32 postIds = 1;
+    int32 reqUser = 2;
+}
+
+message MidstData {
+    int32 like = 1;
+    bool isLiked = 2;
+}
+
+message ReturnLikeDataCount {
+    map<int32, MidstData> likes = 1;
 }

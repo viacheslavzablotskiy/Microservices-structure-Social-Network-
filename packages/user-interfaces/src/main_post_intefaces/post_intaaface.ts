@@ -29,3 +29,9 @@ export interface CretionNewPost {
     imageUrl: string;
 }
 
+
+export interface RetrunPostEntity extends Post_Entity {
+    countComent: number,
+    likeCOunt: number,
+    isLiked: boolean
+}

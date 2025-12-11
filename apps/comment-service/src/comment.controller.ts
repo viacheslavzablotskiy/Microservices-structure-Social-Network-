@@ -4,7 +4,7 @@ import { GrpcMethod } from '@nestjs/microservices';
 import { CommentEnity_Proto } from '@repo/user-interfaces';
 import { CrudCommentService } from './providers/crud.comment.service';
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
-import { ReturnCommentData } from '@repo/proto';
+import { CommentReturnCount, ReturnCommentData } from '@repo/proto';
 
 @Controller()
 export class CommentController {
@@ -37,6 +37,11 @@ export class CommentController {
   @GrpcMethod('DistCommentService', 'deleteComment')
   async deleteComment(data: {id: number, userId: number}) : Promise<Empty> {
     return await this.crudCommentService.deleteComment(data)
+  }
+
+  @GrpcMethod('DistCommentService', 'GetCountofLike')
+  async getCountofLike(data: {postIds: number[]}) : Promise<CommentReturnCount> {  
+    return await this.commentService.getCountofComment(data.postIds)
   }
   
 }
