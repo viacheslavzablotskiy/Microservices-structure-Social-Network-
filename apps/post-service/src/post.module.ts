@@ -6,6 +6,7 @@ import {ConfigModule, ConfigService} from '@nestjs/config'
 import {TypeOrmModule} from '@nestjs/typeorm'
 import { PostEntity } from './entities/post.entity';
 import { CachePackageMdoule } from '@repo/chache-package'
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -31,7 +32,28 @@ import { CachePackageMdoule } from '@repo/chache-package'
       useFactory: (config: ConfigService) => ({
         REDIS_URL: config.get<string>('REDIS_URL_PATH') || ''
       })
-    })
+    }),
+    // ClientsModule.register([
+    //   {
+    //     name: 'DELETE_COMMENTS',
+    //     transport: Transport.RMQ,
+    //     options: {
+    //       urls: ['amqp://localhost:5672'],
+    //       queue: 'comments_queue',
+    //       noAck: false,
+    //       queueOptions: {
+    //         durable: true, 
+    //         autoDelete: false,
+    //         arguments: {
+    //           'x-message-ttl' : 60000,
+    //           'x-max-length': 1000,
+    //           'x-dead-letter-exchange': 'dlx_exchange',
+    //           'x-dead-letter-routing-key': 'errors'
+    //         } 
+    //       }
+    //     }
+    //   }
+    // ])
   ],
   controllers: [AppController],
   providers: [PostService, CrudService],

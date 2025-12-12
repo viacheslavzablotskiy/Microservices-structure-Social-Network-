@@ -5,24 +5,30 @@ package distauth;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
+// serive for auth-service methods
 service DistAuthPathService {
+    // methos to create new user
     rpc RegisterUser (AuthRegiserData) returns (google.protobuf.Empty);
+    // method to login 
     rpc LoginUser (AuthLoginData) returns (LoginUserOutputData);
+    // method to recreate accessToken 
     rpc RefreshToken (RefreshTokenData) returns (NewAccessToken);
 }
 
-
+// data for creation new user
 message AuthRegiserData  {
     string login = 1;
     string email = 2;
     string password = 3;
 }
 
+// data for login data
 message AuthLoginData {
     string email = 1;
     string password = 2;
 }
 
+// enum for UserRole
 enum UserRolePtroto {
   USER_ROLE_UNSPECIFIED = 0;
   ADMIN = 1;
@@ -30,24 +36,27 @@ enum UserRolePtroto {
   GHOST = 3;
 }
 
+//data for recreate new accessToken
 message RefreshTokenData {
-    string refreshToken = 1;
+    string refresh_oken = 1;
 }
 
+// new accessToken
 message NewAccessToken {
-    string accessToken = 1;
+    string access_token = 1;
 }
 
+// data that returns after login
 message LoginUserOutputData {
     int32 id = 1;
-    bool isActivate = 2;
-    bool isVerified = 3;
-    string avatarUrl = 4;
-    string coverUrl = 5;
+    bool is_activate = 2;
+    bool is_verified = 3;
+    string avatar_url = 4;
+    string cover_url = 5;
     string login = 6;
     UserRolePtroto role = 7;
-    google.protobuf.Timestamp createdAt = 8;
-    google.protobuf.Timestamp updatedAt = 9;
+    google.protobuf.Timestamp created_at = 8;
+    google.protobuf.Timestamp updated_at = 9;
     RefreshTokenData refresh_token = 10;
     NewAccessToken access_token = 11;
 }
