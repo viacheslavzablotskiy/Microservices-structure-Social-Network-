@@ -1,8 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
-import { CommentService } from './providers/comment.service';
+import { CommentService } from '../providers/comment.service';
 import { GrpcMethod } from '@nestjs/microservices';
 import { CommentEnity_Proto } from '@repo/user-interfaces';
-import { CrudCommentService } from './providers/crud.comment.service';
+import { CrudCommentService } from '../providers/crud.comment.service';
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
 import { CommentReturnCount, ReturnCommentData } from '@repo/proto';
 

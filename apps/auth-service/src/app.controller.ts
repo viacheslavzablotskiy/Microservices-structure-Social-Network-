@@ -25,25 +25,23 @@ export class AppController {
 
 
   @GrpcMethod('DistAuthPathService', 'LoginUser')
-  async loginUser(data: LoginScemaUser): Promise<User_after_auth_service_login> {
+  async loginUser(data: LoginScemaUser): Promise<Omit<User_after_auth_service_login, 'email' | 'passwordHash'>> {
     
     const response = await this.authService.loginUser(data)
-    console.log(response);
     
-
     const access_token = await this.authService.getNewAccessToken(response)
 
     const refresh_token = await this.authService.getNewRefreshToken(response)
 
-    const l = {...response, access_token, refresh_token}
-    console.log(l);
+    const {email, passwordHash, ...otherData} = response
+    console.log({...otherData, access_token, refresh_token});
     
-
-    return {
-      ...response,
+    return  {
+      ...otherData,
       accessToken: access_token,
       refreshToken: refresh_token
     }
+    
   }
 
 

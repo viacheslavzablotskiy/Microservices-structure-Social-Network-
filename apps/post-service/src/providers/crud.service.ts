@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { PostEntity } from "src/entities/post.entity";
 import {CretionNewPost, Post_Enitity_Proto} from '@repo/user-interfaces'
@@ -6,6 +6,7 @@ import { Repository } from "typeorm";
 import convertFromPostToProto from "src/utils/convertToProto";
 import { Empty } from "google-protobuf/google/protobuf/empty_pb";
 import { convertDateToTimeStamp } from "@repo/proto";
+import { ClientProxy } from "@nestjs/microservices";
 
 
 @Injectable()
@@ -13,7 +14,9 @@ export class CrudService  {
 
     constructor(
         @InjectRepository(PostEntity)
-        private readonly repositoryPost: Repository<PostEntity>
+        private readonly repositoryPost: Repository<PostEntity>,
+        @Inject('DELETE_COMMENTS')
+        private readonly client: ClientProxy
     ) {}
 
     async handleNewPost(data: CretionNewPost): Promise<Post_Enitity_Proto> {
@@ -63,6 +66,9 @@ export class CrudService  {
         if (!validation) throw new BadRequestException('you dont have the permission or we dont have this post')
 
         await this.repositoryPost.delete(data.id)
+
+        this.client.emit('comments_key', {postId: data.id})
+
         return new Empty()
     }
 

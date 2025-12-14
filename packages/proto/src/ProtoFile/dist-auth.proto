@@ -38,7 +38,7 @@ enum UserRolePtroto {
 
 //data for recreate new accessToken
 message RefreshTokenData {
-    string refresh_oken = 1;
+    string refresh_token = 1;
 }
 
 // new accessToken
@@ -57,6 +57,7 @@ message LoginUserOutputData {
     UserRolePtroto role = 7;
     google.protobuf.Timestamp created_at = 8;
     google.protobuf.Timestamp updated_at = 9;
-    RefreshTokenData refresh_token = 10;
-    NewAccessToken access_token = 11;
+    NewAccessToken access_token = 10;
+    RefreshTokenData refresh_token = 11;
 }
+

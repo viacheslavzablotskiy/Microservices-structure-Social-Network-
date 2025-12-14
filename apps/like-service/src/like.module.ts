@@ -21,6 +21,7 @@ import {CachePackageMdoule} from '@repo/chache-package'
         entities: ['dist/**/*.entity{.js,.ts}'],
         migrations: ['dist/src/migrations/*{.js,.ts}'],
         migrationsTableName: '_migrationsLike',
+        migrationsRun: true,
         synchronize: false,
         logging: true
       })

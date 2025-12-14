@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
-import { CommentController } from './comment.controller';
+import { CommentController } from './controllers/comment.controller';
 import { CommentService } from './providers/comment.service';
 import { CrudCommentService } from './providers/crud.comment.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import {TypeOrmModule} from '@nestjs/typeorm'
 import { CommentEnity } from './entitis/comment.entity';
 import {CachePackageMdoule} from "@repo/chache-package"
+import { EventCommentController } from './controllers/event_comment.controller';
+import EventCommentService from './providers/eventPatter.comment';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -22,6 +24,7 @@ import {CachePackageMdoule} from "@repo/chache-package"
         entities: ['dist/**/*.entity{.js,.ts}'],
         migrations: ['dist/src/migrations/*{.js,.ts}'],
         migrationsTableName: '_migrationsComment',
+        migrationsRun: true,
         synchronize: false,
         logging: true
       })
@@ -33,7 +36,7 @@ import {CachePackageMdoule} from "@repo/chache-package"
       })
     })
   ],
-  controllers: [CommentController],
-  providers: [CommentService, CrudCommentService],
+  controllers: [CommentController, EventCommentController],
+  providers: [CommentService, CrudCommentService, EventCommentService],
 })
 export class AppModule {}

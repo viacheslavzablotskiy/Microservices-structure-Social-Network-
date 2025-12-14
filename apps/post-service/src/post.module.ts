@@ -23,6 +23,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         entities: ['dist/**/*.entity{.js,.ts}'],
         migrations: ['dist/src/migrations/*{.js,.ts}'],
         migrationsTableName: '_migrationsPost',
+        migrationsRun: true,
         synchronize: false,
         logging: true
       })
@@ -33,27 +34,28 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         REDIS_URL: config.get<string>('REDIS_URL_PATH') || ''
       })
     }),
-    // ClientsModule.register([
-    //   {
-    //     name: 'DELETE_COMMENTS',
-    //     transport: Transport.RMQ,
-    //     options: {
-    //       urls: ['amqp://localhost:5672'],
-    //       queue: 'comments_queue',
-    //       noAck: false,
-    //       queueOptions: {
-    //         durable: true, 
-    //         autoDelete: false,
-    //         arguments: {
-    //           'x-message-ttl' : 60000,
-    //           'x-max-length': 1000,
-    //           'x-dead-letter-exchange': 'dlx_exchange',
-    //           'x-dead-letter-routing-key': 'errors'
-    //         } 
-    //       }
-    //     }
-    //   }
-    // ])
+    ClientsModule.register([
+      {
+        name: 'DELETE_COMMENTS',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost:5672'],
+          queue: 'comments_queue',
+          exchangeType: 'direct',
+          exchange: 'comment_exchange',
+          queueOptions: {
+            durable: true, 
+            autoDelete: false,
+            arguments: {
+              'x-message-ttl' : 60000, //x-message-age: <> for stream queue
+              'x-max-length': 1000, // x-message-length-bytes: <> for stream queue
+              'x-dead-letter-exchange': 'errors_exchange', // we dotn have DLX in stream
+              'x-dead-letter-routing-key': 'errors_key'
+            } 
+          }
+        }
+      }
+    ])
   ],
   controllers: [AppController],
   providers: [PostService, CrudService],

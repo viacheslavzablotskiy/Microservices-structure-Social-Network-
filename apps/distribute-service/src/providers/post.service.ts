@@ -24,7 +24,9 @@ export class MainPostService implements OnModuleInit{
 
     async getInitialPostsData(reqUser: number): Promise<RetrunPostEntity[]> {
         const response = await firstValueFrom(this.distPostService.getInitialPosts({})) ///there we need change
-        console.log(response);
+        
+        if (!response.posts) return []
+
         const {posts} = response
 
         const postIds = posts.map(post => post.id)
@@ -35,9 +37,9 @@ export class MainPostService implements OnModuleInit{
 
         const likeObject = await this.likeService.likeCountOfPost(postIds, reqUser)
         const {likes} = likeObject 
-        console.log(likeObject);
+        console.log('there', likeObject);
 
-        return response.posts ? posts.map((post) => {
+        return posts.map((post) => {
             return {
                 ...post,
                 createdAt: convertTimeStampToDate(post.createdAt),
@@ -46,12 +48,14 @@ export class MainPostService implements OnModuleInit{
                 countComent: comments[post.id],
                 isLiked: likes[post.id].isLiked
             }
-        }) : []
+        }) 
     }
 
     async getOtherPartOfData(data: {lastId: number, reqUser: number}): Promise<RetrunPostEntity[]> {
         const response = await firstValueFrom(this.distPostService.getSomePartPosts(data))
-        console.log(response);
+        
+        if (!response.posts) return []
+
         const {posts} = response
 
         const postIds = posts.map(post => post.id)
@@ -62,7 +66,7 @@ export class MainPostService implements OnModuleInit{
         const likeObject = await this.likeService.likeCountOfPost(postIds, data.reqUser)
         const {likes} = likeObject
 
-        return response.posts ?posts.map((post) => {
+        return posts.map((post) => {
             return {
                 ...post,
                 createdAt: convertTimeStampToDate(post.createdAt),
@@ -71,7 +75,7 @@ export class MainPostService implements OnModuleInit{
                 isLiked: likes[post.id].isLiked,
                 countComent: comments[post.id]
             }
-        }) : []
+        })
     }
 
     async creationNewPost(data: Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>) : Promise<Post_Entity> {

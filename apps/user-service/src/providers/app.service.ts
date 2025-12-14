@@ -68,7 +68,7 @@ export class UserService {
       relations: {user: true}
     })
 
-    console.log(currentSecurity);
+    console.log('there', currentSecurity);
 
     if (!currentSecurity) throw new UnauthorizedException('There is not User with this email')
 

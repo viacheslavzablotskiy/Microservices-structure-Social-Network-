@@ -21,31 +21,33 @@ export class MainCommentService implements OnModuleInit{
     async getInitialCommentData(data: {postId: number}): Promise<CommentEntity[]> {
         const response = await firstValueFrom(this.distCommentService.getInitialCommentData(data))
 
+        if (!response.comments) return []
+
         const {comments} = response
 
-        
-        
-        return response.comments ? comments.map((comment) => {
+        return comments.map((comment) => {
             return {
                 ...comment,
                 createdAt: convertTimeStampToDate(comment.createdAt),
                 updatedAt: convertTimeStampToDate(comment.updatedAt)
             }
-        }) : []
+        })
     } 
 
     async getOtherPartOfData(data: {postId: number, lastId: number}) : Promise<CommentEntity[]> {
         const response = await firstValueFrom(this.distCommentService.getOtherCommentData(data))
 
+        if (!response.comments) return []
+
         const {comments} = response
 
-        return response.comments ? comments.map((comment) => {
+        return comments.map((comment) => {
             return {
                 ...comment,
                 createdAt: convertTimeStampToDate(comment.createdAt),
                 updatedAt: convertTimeStampToDate(comment.updatedAt)
             }
-        }) : []
+        }) 
     }
 
     async creationNewComment(data: Pick<CommentEntity,'postId' | 'userId' | 'content'>) : Promise<CommentEntity> {
