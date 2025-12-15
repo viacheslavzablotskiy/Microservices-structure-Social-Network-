@@ -15,16 +15,9 @@ export class EventCommentController {
 
     @EventPattern('comments_key')
     async deleteComments(@Payload() data: {postId: number}, @Ctx() context: RmqContext): Promise<void> {
-        console.log(context);
-        console.log(data);
-        
         const channel: Channel = context.getChannelRef()
-        console.log(channel);
-        
         const message = context.getMessage() as ConsumeMessage
-        console.log(message);
-        
-
+                
         try {
             
             await this.eventCommentService.deleteAllComment({postId: data.postId})

@@ -1,11 +1,11 @@
-import { BadRequestException, Injectable, NotAcceptableException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotAcceptableException, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { CommentEnity_Proto } from "@repo/user-interfaces";
 import { CommentEnity } from "src/entitis/comment.entity";
 import { Repository } from "typeorm";
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
-import { CacheService } from "@repo/chache-package";
 import { convertDateToTimeStamp } from "@repo/proto";
+import { ClientProxy } from "@nestjs/microservices";
 
 
 @Injectable()
@@ -13,7 +13,10 @@ export class CrudCommentService {
 
     constructor(@InjectRepository(
         CommentEnity) private readonly repositoryComment: Repository<CommentEnity>,
-        private readonly cacheService: CacheService
+        @Inject('DELETE_COMMENT_COUNT_CACHE')
+        private clientDeleteCountCache: ClientProxy,
+        @Inject('DELETE_CACHE_PAGE_1')
+        private readonly clientDeleteCachePage: ClientProxy
     ) {}
 
 
@@ -24,9 +27,20 @@ export class CrudCommentService {
             content: data.content
         })
 
-        const response = await this.repositoryComment.save(creationData)
-        console.log(response);
-        
+       let response: CommentEnity;
+        try {
+            response = await this.repositoryComment.save(creationData)
+            console.log(response);
+            
+            this.clientDeleteCachePage.emit('comment.page.key', {postId: response.postId})
+            this.clientDeleteCountCache.emit('comment.count.key', {postId: response.postId})
+
+        } catch (error) {
+            throw new BadRequestException(error)
+        }
+
+        if (!response) throw new BadRequestException('data for creation is not valid')
+
         return {
             ...response,
             createdAt: convertDateToTimeStamp(response.createdAt),
@@ -35,24 +49,6 @@ export class CrudCommentService {
     }
     
     async updateComment(data: Pick<CommentEnity_Proto, 'content' | 'id' | 'userId' >): Promise<CommentEnity_Proto> {
-        const cacheKey = `commentId:${data.id}`
-        const cached: CommentEnity | undefined = await this.cacheService.get(cacheKey)
-        
-        if (cached) {
-            if (cached.userId !== data.userId) throw new UnauthorizedException('you dont have permission')
-            cached.content = data.content
-            const response = await this.repositoryComment.save({
-                ...cached,
-                createdAt: new Date(cached.createdAt),
-                updatedAt: new Date(cached.updatedAt)
-            })
-            await this.cacheService.del(cacheKey)
-            return {
-                ...response,
-                createdAt: convertDateToTimeStamp(response.createdAt),
-                updatedAt: convertDateToTimeStamp(response.updatedAt)
-            }
-        } 
         
         let currentComent = await this.repositoryComment.findOneBy(
             {id: data.id}
@@ -81,9 +77,17 @@ export class CrudCommentService {
 
         if (!validation) throw new BadRequestException('there is not comment or you dont have permission')
         
-        await this.repositoryComment.delete({
+        try {
+            await this.repositoryComment.delete({
             id: data.id, userId: data.userId
         })
+            this.clientDeleteCountCache.emit('comment.count.key', {postId: validation.postId})
+            this.clientDeleteCachePage.emit('comment.page.key', {postId: validation.postId})
+
+        } catch (error) {
+            
+        }
+
         return new Empty()
     }
 }

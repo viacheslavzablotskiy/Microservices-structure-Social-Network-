@@ -15,7 +15,6 @@ export class EventCommentService {
 
 
     async deleteAllComment(data: {postId: number}): Promise<void> {
-        console.log('l');
         
         this.commentRepository.delete({postId: data.postId})
     }

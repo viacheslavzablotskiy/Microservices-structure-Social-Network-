@@ -1,17 +1,19 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LikeEntity } from './entities/like.entity';
 import { Repository } from 'typeorm';
 import {type Like_Proto_Entity} from '@repo/user-interfaces'
 import {convertDateToTimeStamp, ReturnLikeCountData} from '@repo/proto'
 import {CacheService} from '@repo/chache-package'
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class LikeService {
 
   constructor(
     @InjectRepository(LikeEntity) private readonly reposotoryLike: Repository<LikeEntity>,
-    private readonly cacheService: CacheService
+    private readonly cacheService: CacheService,
+    @Inject('DELETE_LIKE_COUNT_CACHE') private readonly clientDeleteLikeCount: ClientProxy
   ) {}
 
 
@@ -47,7 +49,12 @@ export class LikeService {
 
     if (!validation) throw new BadRequestException('there is not any like that you want to delete')
 
-    await this.reposotoryLike.delete({postId: data.postId, userId: data.userId})
+    try {
+        await this.reposotoryLike.delete({postId: data.postId, userId: data.userId})
+        this.clientDeleteLikeCount.emit('like.count.key', {postId: validation.postId})
+    } catch (error) {
+
+    }
   }
   
   async countLikesOfPost(postIds: number[], reqUserId: number): Promise<ReturnLikeCountData> {

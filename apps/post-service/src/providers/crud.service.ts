@@ -5,8 +5,8 @@ import {CretionNewPost, Post_Enitity_Proto} from '@repo/user-interfaces'
 import { Repository } from "typeorm";
 import convertFromPostToProto from "src/utils/convertToProto";
 import { Empty } from "google-protobuf/google/protobuf/empty_pb";
-import { convertDateToTimeStamp } from "@repo/proto";
 import { ClientProxy } from "@nestjs/microservices";
+import { readonly } from "zod";
 
 
 @Injectable()
@@ -16,7 +16,12 @@ export class CrudService  {
         @InjectRepository(PostEntity)
         private readonly repositoryPost: Repository<PostEntity>,
         @Inject('DELETE_COMMENTS')
-        private readonly client: ClientProxy
+        private readonly clientDeleteComment: ClientProxy,
+        @Inject('DELETE_COMMENT_COUNT_CACHE')
+        private readonly clientDeleteCommentCountCache: ClientProxy,
+        @Inject('DELETE_LIKE_COUNT_CACHE')
+        private readonly clientDeleteLikeCountCache: ClientProxy,
+        @Inject('DELETE_LIKE_COUNT_CACHE') private readonly clientDeleteCachePage: ClientProxy,
     ) {}
 
     async handleNewPost(data: CretionNewPost): Promise<Post_Enitity_Proto> {
@@ -26,8 +31,9 @@ export class CrudService  {
             imageUrl: data.imageUrl,
             content: data.content
         })
+
         const response = await this.repositoryPost.save(creationData)
-        
+
         return convertFromPostToProto(response)
     }
 
@@ -50,7 +56,7 @@ export class CrudService  {
 
         console.log(currentPost);
         
-
+        
         const resultPost = await this.repositoryPost.save(currentPost)
 
         return convertFromPostToProto(resultPost)
@@ -67,7 +73,10 @@ export class CrudService  {
 
         await this.repositoryPost.delete(data.id)
 
-        this.client.emit('comments_key', {postId: data.id})
+        this.clientDeleteComment.emit('comments_key', {postId: data.id})
+        this.clientDeleteCommentCountCache.emit('comment.count.key', {postId: data.id})
+        this.clientDeleteLikeCountCache.emit('like.count.key', {postId: data.id})
+        this.clientDeleteCachePage.emit('comment.page.key', {postId: data.id})
 
         return new Empty()
     }
