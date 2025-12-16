@@ -7,7 +7,6 @@ import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
 import { convertDateToTimeStamp } from "@repo/proto";
 import { ClientProxy } from "@nestjs/microservices";
 
-
 @Injectable()
 export class CrudCommentService {
 
@@ -28,6 +27,8 @@ export class CrudCommentService {
         })
 
        let response: CommentEnity;
+
+       
         try {
             response = await this.repositoryComment.save(creationData)
             console.log(response);
