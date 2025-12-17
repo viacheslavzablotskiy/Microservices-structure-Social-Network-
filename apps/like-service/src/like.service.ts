@@ -5,7 +5,7 @@ import { DataSource, In, Repository } from 'typeorm';
 import {type Like_Proto_Entity} from '@repo/user-interfaces'
 import {convertDateToTimeStamp, ReturnLikeCountData} from '@repo/proto'
 import {CacheService} from '@repo/chache-package'
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
 
 @Injectable()
 export class LikeService {

@@ -1,25 +1,30 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
-import amqp from "amqp-connection-manager";
+import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import amqp from "amqplib";
 import { CacheService } from "@repo/chache-package";
+import { RabbitConnectionService } from "./main_conection/inv_connection";
+import { threadId } from "worker_threads";
 
 
 @Injectable()
-export class TestConsumer implements OnModuleInit {
+export class TestConsumer implements OnModuleInit, OnModuleDestroy {
+    private channelData: amqp.Channel
 
     constructor(
-        private readonly cacheService: CacheService
+        private readonly cacheService: CacheService,
+        private readonly connectService: RabbitConnectionService
     ) {}
     
     async onModuleInit() {
-        const conn = amqp.connect('amqp://localhost:5672')
-        const channel = conn.createChannel()
+        const conn = await this.connectService.getConnection()
+        const channel = await conn.createChannel()
+        this.channelData = channel
 
-        await channel.assertExchange('', 'direct', {
+        await channel.assertExchange('test_exchange', 'direct', {
             durable: true,
             autoDelete: false
         })
 
-        await channel.assertQueue('', {
+        await channel.assertQueue('test_queue', {
             durable: true,
             autoDelete: false,
             arguments: {
@@ -30,13 +35,14 @@ export class TestConsumer implements OnModuleInit {
             }
         })
 
-        await channel.bindQueue('', '', '')
+        await channel.bindQueue('test_queue', 'test_exchange', 'test_key')
 
-        channel.consume('', async (consumeMessage) => {
+        channel.consume('test_queue', async (consumeMessage) => {
+            if (!consumeMessage) return
             const payload: {cacheKey: string} = JSON.parse(consumeMessage.content.toString())
             try {
 
-                await this.delCommentCache(payload.cacheKey)
+                await this.justTest(payload.cacheKey)
 
                 channel.ack(consumeMessage)
             } catch (error) {
@@ -49,7 +55,12 @@ export class TestConsumer implements OnModuleInit {
     }
 
 
-    async delCommentCache(cacheKey: string): Promise<void> {
-        await this.cacheService.del(cacheKey)
+    async justTest(cacheKey: string): Promise<void> {
+        console.log(`we get the key ${cacheKey}`);
+        
+    }
+
+    async onModuleDestroy() {
+        await this.channelData.close()
     }
 }

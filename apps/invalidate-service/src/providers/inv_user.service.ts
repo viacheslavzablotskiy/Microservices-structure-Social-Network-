@@ -1,47 +1,59 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
+import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { CacheService } from "@repo/chache-package";
 import amqp from "amqplib";
+import {ConnectionService} from '@repo/rabbitmq-package'
+import { ConfigService } from "@nestjs/config";
 
 
 @Injectable()
-export class InvalidateUserService implements OnModuleInit {
+export class InvalidateUserService implements OnModuleInit, OnModuleDestroy {
+    private channel: amqp.Channel
 
-
-    constructor(private readonly cacheSerivce: CacheService) {}
+    constructor(
+      private readonly cacheSerivce: CacheService,
+      private readonly connectionService: ConnectionService,
+      private readonly configService: ConfigService
+    ) {}
 
     async onModuleInit() {
-      const conn = await amqp.connect('amqp://localhost:5672')
-      const channel = await conn.createChannel()
+      const conn = await this.connectionService.getConnection()
+      this.channel = await conn.createChannel()
 
 
-      await channel.assertExchange('cache_exchange', 'direct', {
-        durable: true,
-        autoDelete: false
-      })
+      await this.connectionService.initDLX(
+        this.channel, this.configService.get<string>('DLX_EXCHANGE') || '', this.configService.get<string>('DLX_QUEUE') || '',
+        this.configService.get<string>('DLX_ROUTING_KEY') || '' 
+      )
 
-      await channel.assertQueue('user.login.queue', {
-        durable: true, autoDelete: false, arguments: {
-          'x-message-ttl': 60000, 'x-max-length': 10000,
-          'x-dead-letter-exchange': 'errors_exchange', 'x-dead-letter-routing-key': 'error_key'
-        }
-      })
+      await this.connectionService.initQueue(
+        this.channel, this.configService.get<string>('USER_EXCHANGE') || '', this.configService.get<string>('USER_QUEUE') || '',
+        this.configService.get<string>('USER_ROUTING_KEY') || '', this.configService.get<string>('DLX_EXCHANGE') || '',
+        this.configService.get<string>('DLX_ROUTING_KEY') || ''
+      )
 
-      await channel.bindQueue('user.login.queue', 'cache_exchange', 'user.login.key')
-
-      channel.consume('user.login.queue', async (consumeMessage) => {
+      this.channel.consume(this.configService.get<string>('USER_QUEUE') || '', async (consumeMessage) => {
         if (!consumeMessage) return 
         const payload: {email: string} = JSON.parse(consumeMessage.content.toString())
 
         try {
           await this.delUserCache(payload.email)
-          channel.ack(consumeMessage)
+
+          this.channel.ack(consumeMessage)
         } catch (error) {
-          channel.nack(consumeMessage, false, false)
+          this.channel.nack(consumeMessage, false, false)
+          console.error(error);
         }
-      } )
+      }, {noAck: false})
+
     }
 
     async delUserCache(email: string): Promise<void> {
     await this.cacheSerivce.del(`email:${email}`)
-  }
+    }
+
+    async onModuleDestroy() {
+      if (this.channel) {
+        await this.channel.close()
+      }
+    }
 }
