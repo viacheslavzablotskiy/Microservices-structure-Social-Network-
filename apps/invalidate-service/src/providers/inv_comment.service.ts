@@ -24,13 +24,13 @@ export class InvalidateCommentService implements OnModuleInit, OnModuleDestroy{
         )
 
         await this.connectionService.initQueue(
-        this.channel, this.configService.get<string>('COMMENT_DEL_COUNT_EXCHANGE') || '', this.configService.get<string>('COMMENT_DEL_COUNT_QUEUE') || '',
+        this.channel, this.configService.get<string>('CACHE_EXCHANGE') || '', this.configService.get<string>('COMMENT_DEL_COUNT_QUEUE') || '',
         this.configService.get<string>('COMMENT_DEL_COUNT_KEY') || '', this.configService.get<string>('DLX_EXCHANGE') || '',
         this.configService.get<string>('DLX_ROUTING_KEY') || ''
         )
 
         await this.connectionService.initQueue(
-        this.channel, this.configService.get<string>('COMMENT_DEL_PAGE_EXCHANGE') || '', this.configService.get<string>('COMMENT_DEL_PAGE_QUEUE') || '',
+        this.channel, this.configService.get<string>('CACHE_EXCHANGE') || '', this.configService.get<string>('COMMENT_DEL_PAGE_QUEUE') || '',
         this.configService.get<string>('COMMENT_DEL_PAGE_ROUTING_KEY') || '', this.configService.get<string>('DLX_EXCHANGE') || '',
         this.configService.get<string>('DLX_ROUTING_KEY') || ''
         )

@@ -4,6 +4,7 @@ import {CommentReturnCount, convertDateToTimeStamp, convertTimeStampToDate, Dist
 import { CommentEntity } from "@repo/user-interfaces";
 import { firstValueFrom } from "rxjs";
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
+import { int32, number } from "zod";
 
 
 
@@ -68,10 +69,13 @@ export class MainCommentService implements OnModuleInit{
         }
     }
 
-    async deleteComment(data: Pick<CommentEntity, 'id' | 'userId'>): Promise<Empty> {
-        console.log(data);
+    async deleteComment(data: Pick<CommentEntity, 'postId' | 'userId' | 'id'>): Promise<Empty> {
         
-        await firstValueFrom(this.distCommentService.deleteComment(data))
+        await firstValueFrom(this.distCommentService.deleteComment({
+            id: data.id,
+            userId: data.id,
+            postId: data.postId
+        }))
         return new Empty()
     }
 
@@ -79,3 +83,4 @@ export class MainCommentService implements OnModuleInit{
         return await firstValueFrom(this.distCommentService.getCountofLike({postIds: postIds}))
     }
 }
+

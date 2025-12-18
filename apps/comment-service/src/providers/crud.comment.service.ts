@@ -1,94 +1,116 @@
-import { BadRequestException, Inject, Injectable, NotAcceptableException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotAcceptableException, OnModuleDestroy, OnModuleInit, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { CommentEnity_Proto } from "@repo/user-interfaces";
 import { CommentEnity } from "src/entitis/comment.entity";
 import { Repository } from "typeorm";
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
 import { convertDateToTimeStamp } from "@repo/proto";
-import { ClientProxy } from "@nestjs/microservices";
+import * as amqp from 'amqplib'
+import {ConnectionService} from '@repo/rabbitmq-package'
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
-export class CrudCommentService {
+export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
+    private channel: amqp.ConfirmChannel
 
     constructor(@InjectRepository(
         CommentEnity) private readonly repositoryComment: Repository<CommentEnity>,
-        @Inject('DELETE_COMMENT_COUNT_CACHE')
-        private clientDeleteCountCache: ClientProxy,
-        @Inject('DELETE_CACHE_PAGE_1')
-        private readonly clientDeleteCachePage: ClientProxy
+        private readonly configService: ConfigService,
+        private readonly connectionService: ConnectionService
     ) {}
+
+    async onModuleInit() {
+        const conn = await this.connectionService.getConnection()
+        this.channel = await conn.createConfirmChannel()
+    }
 
 
     async createNewComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'id'>): Promise<CommentEnity_Proto> {
-        const creationData = this.repositoryComment.create({
+        try {
+            const creationData = this.repositoryComment.create({
             userId: data.userId,
             postId: data.postId,
             content: data.content
-        })
+            })
 
-       let response: CommentEnity;
-
-       
-        try {
-            response = await this.repositoryComment.save(creationData)
-            console.log(response);
+            const response = await this.repositoryComment.save(creationData)
             
-            this.clientDeleteCachePage.emit('comment.page.key', {postId: response.postId})
-            this.clientDeleteCountCache.emit('comment.count.key', {postId: response.postId})
+            await this.connectionService.publish(this.channel,
+                this.configService.get<string>('CACHE_EXCHANGE') || '',
+                this.configService.get<string>('COMMENT_DEL_PAGE_ROUTING_KEY') || '',
+                Buffer.from(JSON.stringify({postId: response.postId}))
+            ).catch((error) => console.error(error))
 
-        } catch (error) {
-            throw new BadRequestException(error)
-        }
+            await this.connectionService.publish(this.channel,
+                this.configService.get<string>('CACHE_EXCHANGE') || '',
+                this.configService.get<string>('COMMENT_DEL_COUNT_KEY') || '',
+                Buffer.from(JSON.stringify({postId: response.postId}))
+            ).catch(error => console.error(error))
 
-        if (!response) throw new BadRequestException('data for creation is not valid')
-
-        return {
+            return {
             ...response,
             createdAt: convertDateToTimeStamp(response.createdAt),
             updatedAt: convertDateToTimeStamp(response.updatedAt)
+            }
+        } catch (error) {
+            if (error.code === '23505') {
+                throw new BadRequestException('there is soem comment with this data')
+            }
+            throw error
         }
     }
     
     async updateComment(data: Pick<CommentEnity_Proto, 'content' | 'id' | 'userId' >): Promise<CommentEnity_Proto> {
         
-        let currentComent = await this.repositoryComment.findOneBy(
-            {id: data.id}
+        const response = await this.repositoryComment.update(
+            {id: data.id, userId: data.userId},
+            {content: data.content}
         )
-        
-        if (!currentComent) throw new BadRequestException('there is no comment with this id and post') 
-        if (currentComent.userId !== data.userId) throw new NotAcceptableException('you dont have permission to delete this')
-        
-        console.log(currentComent.userId === data.userId);
-        
-        currentComent.content = data.content
 
-        const response = await this.repositoryComment.save(currentComent)
+        if (response.affected === 0) {
+            throw new BadRequestException('no comment fount with this id for update')   
+        }
+
+        const updated_data = await this.repositoryComment.findOneBy({
+            id: data.id
+        })
+
         return {
-            ...response,
-            createdAt: convertDateToTimeStamp(response.createdAt),
-            updatedAt: convertDateToTimeStamp(response.updatedAt)
+            ...updated_data!,
+            createdAt: convertDateToTimeStamp(updated_data!.createdAt),
+            updatedAt: convertDateToTimeStamp(updated_data!.updatedAt)
         }
     }
 
-    async deleteComment(data: {id: number, userId: number}): Promise<Empty> {
-        
-        const validation = await this.repositoryComment.findOneBy({
-            userId: data.userId, id: data.id
-        })
-
-        if (!validation) throw new BadRequestException('there is not comment or you dont have permission')
-        
+    async deleteComment(data: {id: number, userId: number, postId: number}): Promise<Empty> {
         try {
-            await this.repositoryComment.delete({
-            id: data.id, userId: data.userId
-        })
-            this.clientDeleteCountCache.emit('comment.count.key', {postId: validation.postId})
-            this.clientDeleteCachePage.emit('comment.page.key', {postId: validation.postId})
+            const response = await this.repositoryComment.delete({id: data.id, userId: data.userId})
+
+            if (response.affected === 0) {
+                throw new BadRequestException('there was not comment with that id')
+            }
+
+            await this.connectionService.publish(this.channel,
+            this.configService.get<string>('CACHE_EXCHANGE') || '',
+            this.configService.get<string>('COMMENT_DEL_PAGE_ROUTING_KEY') || '',
+            {postId: data.postId})
+            await this.connectionService.publish(this.channel,
+            this.configService.get<string>('CACHE_EXCHANGE') || '',
+            this.configService.get<string>('COMMENT_DEL_COUNT_KEY') || '',
+            Buffer.from(JSON.stringify({postId: data.postId})))
+
+            return new Empty()
 
         } catch (error) {
-            
+            console.error(error);
+            throw error
         }
+    }
 
-        return new Empty()
+
+    async onModuleDestroy() {
+        if (this.channel) {
+            await this.channel.close()
+        }
     }
 }

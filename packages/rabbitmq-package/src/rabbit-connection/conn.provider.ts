@@ -23,7 +23,28 @@ export class ConnectionService implements OnModuleInit, OnModuleDestroy {
         return new Promise<void>((resolve, reject) => {
             channel.publish(exchangeName, exchangeRoutingKey, buffer, {persistent: true}, (ok, error) => {
                 if (error) reject(error);
-                else resolve()
+                else resolve(ok)
+            })
+        })
+    }
+
+    async publishRPC<T>(channel: amqp.Channel, exchangeName: string, routingKey: string, payload: any): Promise<T> {
+        const correlationId = crypto.randomUUID()
+        const replyToQueue = await channel.assertQueue('some_queue', {
+            exclusive: true, autoDelete: true
+        })
+
+        return new Promise((resolve) => {
+            channel.consume(replyToQueue.queue, async (consumeMessage) => {
+                if (consumeMessage.properties.correlationId === correlationId) {
+                    resolve(JSON.parse(consumeMessage.content.toString()))
+                }
+            })
+
+            channel.publish(exchangeName, routingKey, payload, {
+                replyTo: replyToQueue.queue,
+                correlationId: correlationId,
+                persistent: true
             })
         })
     }

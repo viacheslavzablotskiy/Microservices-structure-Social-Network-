@@ -1,96 +1,70 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LikeEntity } from './entities/like.entity';
 import { DataSource, In, Repository } from 'typeorm';
 import {type Like_Proto_Entity} from '@repo/user-interfaces'
 import {convertDateToTimeStamp, ReturnLikeCountData} from '@repo/proto'
 import {CacheService} from '@repo/chache-package'
-import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
+import {ConnectionService} from '@repo/rabbitmq-package'
+import * as amqp from 'amqplib'
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class LikeService {
+export class LikeService implements OnModuleInit, OnModuleDestroy{
+  private channel: amqp.ConfirmChannel
 
   constructor(
     @InjectRepository(LikeEntity) private readonly reposotoryLike: Repository<LikeEntity>,
     private readonly cacheService: CacheService,
-    @Inject('DELETE_LIKE_COUNT_CACHE') private readonly clientDeleteLikeCount: ClientProxy
+    private readonly connectionService: ConnectionService ,
+    private readonly configService: ConfigService
   ) {}
 
+  async onModuleInit() {
+    const conn = await this.connectionService.getConnection()
+    this.channel = await conn.createConfirmChannel()
+  }
 
   async createNewLike(data: Omit<Like_Proto_Entity, 'createdAt' | 'id'>): Promise<Like_Proto_Entity> {
 
-    const validation = await this.reposotoryLike.findOne({
-      where: {postId: data.postId, userId: data.userId
-      }
-    })
-
-    if (validation) throw new BadRequestException('you have already like under this post') 
-
-    const creationData = this.reposotoryLike.create({
+    try {
+      const creationData = this.reposotoryLike.create({
       postId: data.postId,
       userId: data.userId
     })
-
     const {createdAt, ...otherData} = await this.reposotoryLike.save(creationData)
+
+    await this.connectionService.publish(this.channel, this.configService.get<string>('CACHE_EXCHANGE') || '',
+    this.configService.get<string>('LIKE_COUNT_ROUTING_KEY') || '', {postId: otherData.postId})
+    .catch((error) => console.error(error)
+    ) 
 
     return {
       ...otherData,
       createdAt: convertDateToTimeStamp(createdAt)
     }
+    } catch (error) {
+        if (error.code === '23505') {
+          throw new BadRequestException('you already have like')
+        }
+        throw error
+    }
+  
   }
 
   async deleteLike(data: {postId: number, userId: number}): Promise<void> {
-    const validation = await this.reposotoryLike.findOneBy({
-      postId: data.postId, userId: data.userId
-    })
-
-    console.log(validation);
-    
-
-    if (!validation) throw new BadRequestException('there is not any like that you want to delete')
-
     try {
-        await this.reposotoryLike.delete({postId: data.postId, userId: data.userId})
-        this.clientDeleteLikeCount.emit('like.count.key', {postId: validation.postId})
-    } catch (error) {
+        const response = await this.reposotoryLike.delete({postId: data.postId, userId: data.userId})
 
+        if (response.affected === 0) {
+          throw new BadRequestException('there is any like to delete')
+        }
+        await this.connectionService.publish(this.channel, this.configService.get<string>('CACHE_EXCHANGE') || '',
+        this.configService.get<string>('LIKE_COUNT_ROUTING_KEY') || '', {postId: data.postId}).catch(error => console.error(error))
+    } catch (error) {
+        console.error(error);
     }
   }
-  
-  // async countLikesOfPost(postIds: number[], reqUserId: number): Promise<ReturnLikeCountData> {
-  //   console.log(postIds);
-    
-  //     const response: {postId: number, isLiked: boolean, like: number}[] = await Promise.all(
-  //       postIds.map(async (postId) => {
-  //         const cacheKey = `postId:${postId}:like:count`
-  //         const cached: {like: number} | undefined = await this.cacheService.get<{like: number}>(cacheKey)
-
-  //         if (cached !== undefined) {
-  //           const response = await this.reposotoryLike.findOneBy({userId: reqUserId, postId: postId})
-  //           return {postId: postId, ...cached, isLiked: !!response}
-  //         } else {
-  //           const [firstValue, secondValue] = await Promise.all([
-  //             this.reposotoryLike.find({where: {postId: postId}}),
-  //             this.reposotoryLike.findOneBy({userId: reqUserId, postId: postId})
-  //           ])
-
-  //           const cachedData = {like: firstValue.length}
-  //           this.cacheService.set(cacheKey, {like: cachedData.like}, 0)
-            
-  //           return {postId: postId, ...cachedData, isLiked: !!secondValue}
-  //         }
-  //       })
-  //     )
-
-  //     const resultObject = response.reduce<Record<number, {like: number, isLiked: boolean}>>((acc, {postId, isLiked, like}) => {
-  //       acc[postId] = {like: like, isLiked: isLiked}
-  //       return acc
-  //     }, {})
-      
-
-  //     return {likes: resultObject}
-  // }
-
 
   async countLikesOfPost(postIds: number[], reqUser: number): Promise<ReturnLikeCountData> {
     const cachedCount: Record<number, number> = {}
@@ -115,25 +89,27 @@ export class LikeService {
       .groupBy('like.postId')
       .getRawMany()
 
-      console.log(likesGrouped);
-      
+      const foundIds = new Set(likesGrouped.map(record => Number(record.postId)))
 
-      await Promise.all(
+      await Promise.all([
         likesGrouped.map(({postId, count}) => {
           cachedCount[Number(postId)] = Number(count)
           const cacheKey = `postId:${Number(postId)}:like:count`
+          console.log('hello');
           return this.cacheService.set(cacheKey, {like: Number(count)}, 0)
+        }),
+        missingPostIds.filter(postId => !foundIds.has(postId)).map(postId => {
+          cachedCount[Number(postId)] = 0;
+          const cacheKey = `postId:${Number(postId)}:like:count`
+          return this.cacheService.set(cacheKey, {like: 0}, 0)
         })
-      )
+      ])
     }
 
     const userLikes = await this.reposotoryLike.find({
       where: {userId: reqUser, postId: In(postIds)}
     })
     const likedSet = new Set(userLikes.map(like => like.postId))
-
-    console.log(cachedCount);
-    
 
     const resultObject: Record<number, {like: number, isLiked: boolean}> = {};
     for (const postId of postIds) {
@@ -142,11 +118,13 @@ export class LikeService {
         isLiked: likedSet.has(postId)
       }
     }
-
-    console.log(resultObject);
-    
     return {likes: resultObject}
   }
  
+  async onModuleDestroy() {
+    if (this.channel) {
+      await this.channel.close()
+    }
+  }
 
 }

@@ -35,7 +35,7 @@ export class CommentController {
   }
 
   @GrpcMethod('DistCommentService', 'deleteComment')
-  async deleteComment(data: {id: number, userId: number}) : Promise<Empty> {
+  async deleteComment(data: {id: number, userId: number, postId: number}) : Promise<Empty> {
     return await this.crudCommentService.deleteComment(data)
   }
 

@@ -26,12 +26,12 @@ export class InvalidateUserService implements OnModuleInit, OnModuleDestroy {
       )
 
       await this.connectionService.initQueue(
-        this.channel, this.configService.get<string>('USER_EXCHANGE') || '', this.configService.get<string>('USER_QUEUE') || '',
+        this.channel, this.configService.get<string>('CACHE_EXCHANGE') || '', this.configService.get<string>('USER_QUEUE') || '',
         this.configService.get<string>('USER_ROUTING_KEY') || '', this.configService.get<string>('DLX_EXCHANGE') || '',
         this.configService.get<string>('DLX_ROUTING_KEY') || ''
       )
 
-      this.channel.consume(this.configService.get<string>('USER_QUEUE') || '', async (consumeMessage) => {
+      await this.channel.consume(this.configService.get<string>('USER_QUEUE') || '', async (consumeMessage) => {
         if (!consumeMessage) return 
         const payload: {email: string} = JSON.parse(consumeMessage.content.toString())
 

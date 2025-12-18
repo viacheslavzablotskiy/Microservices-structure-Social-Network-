@@ -37,7 +37,7 @@ export class TestConsumer implements OnModuleInit, OnModuleDestroy {
 
         await channel.bindQueue('test_queue', 'test_exchange', 'test_key')
 
-        channel.consume('test_queue', async (consumeMessage) => {
+        await channel.consume('test_queue', async (consumeMessage) => {
             if (!consumeMessage) return
             const payload: {cacheKey: string} = JSON.parse(consumeMessage.content.toString())
             try {

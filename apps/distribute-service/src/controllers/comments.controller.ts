@@ -74,10 +74,11 @@ export class MainCommentController {
     @ApiNoContentResponse({description: 'you delete your comment successfully'})
     async handleDeleteComment(
     @Req() req: Request,
-    @Param('id') id: string
+    @Param('id') id: string,
+    @Query('postId') postId: string
     ) : Promise<void> {
         if (!req.user) throw new UnauthorizedException('you dont have the token')
         
-        await this.commentService.deleteComment({userId: req.user.userId, id: Number(id)})
+        await this.commentService.deleteComment({userId: req.user.userId, id: Number(id), postId: Number(postId)})
     }
 }

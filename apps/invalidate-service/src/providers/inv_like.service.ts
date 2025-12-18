@@ -25,14 +25,14 @@ export class InvalidateLikeService implements OnModuleInit, OnModuleDestroy {
       )
 
       await this.connectionService.initQueue(
-        this.channel, this.configService.get<string>('LIKE_COUNT_EXCHANGE') || '', this.configService.get<string>('LIKE_COUNT_QUEUE') || '',
+        this.channel, this.configService.get<string>('CACHE_EXCHANGE') || '', this.configService.get<string>('LIKE_COUNT_QUEUE') || '',
         this.configService.get<string>('LIKE_COUNT_ROUTING_KEY') || '', this.configService.get<string>('DLX_EXCHANGE') || '',
         this.configService.get<string>('DLX_ROUTING_KEY') || ''
       ) 
 
-      this.channel.prefetch(10)
+      await this.channel.prefetch(10)
 
-      this.channel.consume(this.configService.get<string>('LIKE_COUNT_QUEUE') || '', async (consumeMessage) => {
+      this.channel.consume(this.configService.get<string>('LIKE_COUNT_QUEUE') || '', async (consumeMessage) => {        
         if (!consumeMessage) return
         const payload: {postId: number} = JSON.parse(consumeMessage.content.toString())
 
@@ -48,7 +48,7 @@ export class InvalidateLikeService implements OnModuleInit, OnModuleDestroy {
     }
 
     async delLikeCountCache(postId: number): Promise<void> {
-    await this.cacheSerivce.del(`postId:${postId}:like:count`)
+      await this.cacheSerivce.del(`postId:${postId}:like:count`)
     }
 
     async onModuleDestroy() {
