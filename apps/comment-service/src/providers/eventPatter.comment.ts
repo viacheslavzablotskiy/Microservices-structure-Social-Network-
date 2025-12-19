@@ -52,7 +52,7 @@ export class EventCommentService implements OnModuleInit, OnModuleDestroy{
 
 
     async deleteAllComment(data: {postId: number}): Promise<void> {
-        this.commentRepository.delete({postId: data.postId})
+        await this.commentRepository.delete({postId: data.postId})
     }
 
     async onModuleDestroy() {

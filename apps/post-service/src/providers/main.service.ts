@@ -29,7 +29,7 @@ export class PostService {
 
     const posts = inital_part_posts.map((port) => convertFromPostToProto(port))
 
-    await this.cacheService.set(cacheKey, posts, 10_000)
+    await this.cacheService.set(cacheKey, posts, 0)
     
     return {posts: posts}
   }

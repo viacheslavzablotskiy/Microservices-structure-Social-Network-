@@ -39,7 +39,7 @@ export class CommentService {
       const response = initialData.length === 0 ? [] : initialData.map((comment) => convertCommentToProtoComment(comment))
       console.log(response);
 
-      await this.cacheService.set(cacheKey, response, 30_000)
+      await this.cacheService.set(cacheKey, response, 0)
 
       console.log(await this.cacheService.get(cacheKey));
       
@@ -52,44 +52,53 @@ export class CommentService {
         where: {postId: data.postId, id: MoreThan(data.lastId)},
         take: 20
       })
-
-      console.log('lox2');
-      
-
       const response = initialData.length === 0 ? [] : initialData.map((comment) => convertCommentToProtoComment(comment))
 
       return {comments: response}
     }
     
-
     async getCountofComment(postIds: number[]): Promise<CommentReturnCount> {
+      const cacheData: Record<number, number> = {}
+      const missingIds: number[] = []
 
-      const result = await Promise.all(
-        postIds.map(async (postId) => {
-          const cacheKey = `postId:${postId}:comment:count`
-          const cached: number | undefined = await this.cacheService.get(cacheKey)
+      for (const postId of postIds) {
+        const cache: number | undefined = await this.cacheService.get(`comments:post:${postId}:count`)
+        if (cache !== undefined) {
+            cacheData[postId] = cache
+        } else {
+          missingIds.push(postId)
+        }
+      }
 
-          if (cached !== undefined) {
-            return {postId: postId, count: cached}
-          } else {
-            const response = await this.repositoryComment.find({
-              where: {postId: postId}
+      if (missingIds.length > 0) {
+        const response: {postId: string, count: string}[] = await this.repositoryComment
+        .createQueryBuilder('comment')
+        .select('comment.postId', 'postId')
+        .addSelect('COUNT(*)', 'count')
+        .where('comment.postId IN (:...missingIds)', {missingIds})
+        .groupBy('comment.postId')
+        .getRawMany()
+
+        const newSet = new Set(response.map(data => Number(data.postId)))
+
+        await Promise.all([
+            response.map(({postId, count}) => {
+              cacheData[Number(postId)] = Number(count)
+              const cacheKey = `comments:post:${Number(postId)}:count`
+              return this.cacheService.set(cacheKey, Number(count), 0)
+            }),
+            missingIds.filter(id => !newSet.has(id)).map((postId) => {
+              cacheData[Number(postId)] = 0
+              const cacheKey = `comments:post:${Number(postId)}:count`
+              return this.cacheService.set(cacheKey, 0, 0)
             })
-            const count = response.length
-            await this.cacheService.set(cacheKey, count, 0)
-            return {postId: postId, count: count}
-          }
-        })
-      )
+        ])
+      }
 
-      const resultObject: Record<number, number> = {};
-      result.forEach(({postId, count}) => {
-          resultObject[postId] = count
-      })
-
-      console.log(resultObject);
+      console.log(cacheData);
       
 
-      return {comments: resultObject}
+      return {comments: cacheData}
+
     }
 }

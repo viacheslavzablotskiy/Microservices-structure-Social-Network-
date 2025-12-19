@@ -71,11 +71,8 @@ export class MainCommentService implements OnModuleInit{
 
     async deleteComment(data: Pick<CommentEntity, 'postId' | 'userId' | 'id'>): Promise<Empty> {
         
-        await firstValueFrom(this.distCommentService.deleteComment({
-            id: data.id,
-            userId: data.id,
-            postId: data.postId
-        }))
+        console.log(data);
+        await firstValueFrom(this.distCommentService.deleteComment(data))
         return new Empty()
     }
 

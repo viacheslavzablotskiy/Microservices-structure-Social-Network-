@@ -27,6 +27,8 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
 
     async createNewComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'id'>): Promise<CommentEnity_Proto> {
         try {
+            console.log(data);
+            
             const creationData = this.repositoryComment.create({
             userId: data.userId,
             postId: data.postId,
@@ -38,13 +40,13 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
             await this.connectionService.publish(this.channel,
                 this.configService.get<string>('CACHE_EXCHANGE') || '',
                 this.configService.get<string>('COMMENT_DEL_PAGE_ROUTING_KEY') || '',
-                Buffer.from(JSON.stringify({postId: response.postId}))
+                {postId: response.postId}
             ).catch((error) => console.error(error))
 
             await this.connectionService.publish(this.channel,
                 this.configService.get<string>('CACHE_EXCHANGE') || '',
                 this.configService.get<string>('COMMENT_DEL_COUNT_KEY') || '',
-                Buffer.from(JSON.stringify({postId: response.postId}))
+                {postId: response.postId}
             ).catch(error => console.error(error))
 
             return {
@@ -83,6 +85,8 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
     }
 
     async deleteComment(data: {id: number, userId: number, postId: number}): Promise<Empty> {
+        console.log(data);
+        
         try {
             const response = await this.repositoryComment.delete({id: data.id, userId: data.userId})
 
@@ -97,7 +101,7 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
             await this.connectionService.publish(this.channel,
             this.configService.get<string>('CACHE_EXCHANGE') || '',
             this.configService.get<string>('COMMENT_DEL_COUNT_KEY') || '',
-            Buffer.from(JSON.stringify({postId: data.postId})))
+            {postId: data.postId})
 
             return new Empty()
 
