@@ -16,7 +16,8 @@ const ROUTING_KEY = {
     COMMENT_DEL_COUNT: 'COMMENT_DEL_COUNT_KEY',
     DELETE_COMMENTS: 'DELETE_COMMENT_KEY',
     LIKE_COUNT: 'LIKE_COUNT_ROUTING_KEY',
-    POST_PAGE_CACHE: 'POST_PAGE_CACHE_ROUTING_KEY'
+    POST_PAGE_CACHE: 'POST_PAGE_CACHE_ROUTING_KEY',
+    DELETE_LIKES: 'LIKES_DELETE_ROUTING_KEY'
 } as const
 
 type RoutingKeyValues = keyof typeof ROUTING_KEY
@@ -26,6 +27,7 @@ type PayloadMap = {
     COMMENT_DEL_COUNT: {postId: number},
     DELETE_COMMENTS: {postId: number},
     LIKE_COUNT: {postId: number},
+    DELETE_LIKES: {postId: number}
     POST_PAGE_CACHE: ''
 }
 type Payload<T extends RoutingKeyValues> = PayloadMap[T]
@@ -61,7 +63,8 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
             COMMENT_DEL_COUNT: this.configService.get<string>('COMMENT_DEL_COUNT_KEY') || '',
             DELETE_COMMENTS: this.configService.get<string>('DELETE_COMMENT_KEY') || '',
             LIKE_COUNT: this.configService.get<string>('LIKE_COUNT_ROUTING_KEY') || '',
-            POST_PAGE_CACHE: this.configService.get<string>('POST_PAGE_CACHE_ROUTING_KEY') || ''
+            POST_PAGE_CACHE: this.configService.get<string>('POST_PAGE_CACHE_ROUTING_KEY') || '',
+            DELETE_LIKES: this.configService.get<string>('LIKES_DELETE_ROUTING_KEY') || '',
         }
 
         const missing = [
@@ -148,6 +151,7 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
                     this.safePublish('COMMENT_DEL_COUNT', {postId: data.id}),
                     this.safePublish('DELETE_COMMENTS', {postId: data.id}),
                     this.safePublish('LIKE_COUNT', {postId: data.id}),
+                    this.safePublish('DELETE_LIKES', {postId: data.id}),
                     this.safePublish('POST_PAGE_CACHE', '')
                 ]
                 const result = await Promise.allSettled(tasks)

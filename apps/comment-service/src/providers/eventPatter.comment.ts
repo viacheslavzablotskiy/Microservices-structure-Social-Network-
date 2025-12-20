@@ -21,17 +21,19 @@ export class EventCommentService implements OnModuleInit, OnModuleDestroy{
     async onModuleInit() {
         const conn =  await this.connectionService.getConnection()
         this.channel = await conn.createChannel()
+        
+        const cacheExchange = this.configService.get<string>('CACHE_EXCHANGE') || ''
+        const dlxExchange = this.configService.get<string>('DLX_EXCHANGE') || ''
+        const dlxRoutingKey = this.configService.get<string>('DLX_ROUTING_KEY') || ''
+        const dlxQueue = this.configService.get<string>('DLX_QUEUE') || ''
 
-        await this.connectionService.initDLX(
-        this.channel, this.configService.get<string>('DLX_EXCHANGE') || '', this.configService.get<string>('DLX_QUEUE') || '',
-        this.configService.get<string>('DLX_ROUTING_KEY') || '' 
-        )
+        const deleteCommentsQueue = this.configService.get<string>('DELETE_COMMENTS_QUEUE') || ''
+        const deleteCommentsKey = this.configService.get<string>('DELETE_COMMENT_KEY') || ''
 
-        await this.connectionService.initQueue(
-        this.channel, this.configService.get<string>('DELETE_COMMENTS_EXCHANGE') || '', this.configService.get<string>('DELETE_COMMENTS_QUEUE') || '',
-        this.configService.get<string>('DELETE_COMMENT_KEY') || '', this.configService.get<string>('DLX_EXCHANGE') || '',
-        this.configService.get<string>('DLX_ROUTING_KEY') || ''
-        ) 
+        await Promise.all([
+            this.connectionService.initDLX(this.channel, dlxExchange, dlxQueue,dlxRoutingKey),
+            this.connectionService.initQueue(this.channel, cacheExchange, deleteCommentsQueue,deleteCommentsKey, dlxExchange, dlxRoutingKey) 
+        ]) 
 
         this.channel.prefetch(10)
 

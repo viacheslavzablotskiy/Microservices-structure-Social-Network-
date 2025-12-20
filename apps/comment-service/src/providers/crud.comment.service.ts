@@ -9,12 +9,28 @@ import * as amqp from 'amqplib'
 import {ConnectionService} from '@repo/rabbitmq-package'
 import { ConfigService } from "@nestjs/config";
 
+
+const ROUTING_KEY = {
+    DELETE_POST_PAGE: 'POST_PAGE_CACHE_ROUTING_KEY',
+    DELETE_COMMENT_PAGE: 'COMMENT_DEL_PAGE_ROUTING_KEY',
+    DELETE_COUNT_COMMENT: 'COMMENT_DEL_COUNT_KEY'
+} as const
+type RoutingKeys = keyof typeof ROUTING_KEY
+type ROUTING_KEYS_PAYLOAD = {
+    DELETE_POST_PAGE: '',
+    DELETE_COMMENT_PAGE: {postId: number},
+    DELETE_COUNT_COMMENT: {postId: number},
+}
+type Payload<K extends RoutingKeys> = ROUTING_KEYS_PAYLOAD[K]
+
 @Injectable()
 export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
     private channel: amqp.ConfirmChannel
+    private exchangeName: string
+    private routingsKeys: Record<RoutingKeys, string>
 
-    constructor(@InjectRepository(
-        CommentEnity) private readonly repositoryComment: Repository<CommentEnity>,
+    constructor(
+        @InjectRepository(CommentEnity) private readonly repositoryComment: Repository<CommentEnity>,
         private readonly configService: ConfigService,
         private readonly connectionService: ConnectionService
     ) {}
@@ -22,6 +38,22 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
     async onModuleInit() {
         const conn = await this.connectionService.getConnection()
         this.channel = await conn.createConfirmChannel()
+
+        this.exchangeName = this.configService.get<string>('CACHE_EXCHANGE') || ''
+
+        this.routingsKeys = {
+            DELETE_POST_PAGE: this.configService.get<string>('POST_PAGE_CACHE_ROUTING_KEY') || '',
+            DELETE_COMMENT_PAGE: this.configService.get<string>('COMMENT_DEL_PAGE_ROUTING_KEY') || '',
+            DELETE_COUNT_COMMENT: this.configService.get<string>('COMMENT_DEL_COUNT_KEY') || ''
+        }
+    }
+
+    async safePublish<K extends RoutingKeys>(routingKey: K, payload: Payload<K>) {
+        try {
+            await this.connectionService.publish(this.channel, this.exchangeName, this.routingsKeys[routingKey], payload)
+        } catch (error) {
+            throw new Error('error occured by this reason: ', error)
+        }
     }
 
 
@@ -37,17 +69,14 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
 
             const response = await this.repositoryComment.save(creationData)
             
-            await this.connectionService.publish(this.channel,
-                this.configService.get<string>('CACHE_EXCHANGE') || '',
-                this.configService.get<string>('COMMENT_DEL_PAGE_ROUTING_KEY') || '',
-                {postId: response.postId}
-            ).catch((error) => console.error(error))
-
-            await this.connectionService.publish(this.channel,
-                this.configService.get<string>('CACHE_EXCHANGE') || '',
-                this.configService.get<string>('COMMENT_DEL_COUNT_KEY') || '',
-                {postId: response.postId}
-            ).catch(error => console.error(error))
+           const result = await Promise.allSettled([
+                this.safePublish('DELETE_COMMENT_PAGE', {postId: response.postId}),
+                this.safePublish('DELETE_COUNT_COMMENT', {postId: response.postId}),
+                this.safePublish('DELETE_POST_PAGE', '')
+           ])
+           result.forEach((task) => {
+                if (task.status === 'rejected') console.error(task.reason)
+           })
 
             return {
             ...response,
@@ -94,14 +123,14 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
                 throw new BadRequestException('there was not comment with that id')
             }
 
-            await this.connectionService.publish(this.channel,
-            this.configService.get<string>('CACHE_EXCHANGE') || '',
-            this.configService.get<string>('COMMENT_DEL_PAGE_ROUTING_KEY') || '',
-            {postId: data.postId})
-            await this.connectionService.publish(this.channel,
-            this.configService.get<string>('CACHE_EXCHANGE') || '',
-            this.configService.get<string>('COMMENT_DEL_COUNT_KEY') || '',
-            {postId: data.postId})
+            const result = await Promise.allSettled([
+                this.safePublish('DELETE_COMMENT_PAGE', {postId: data.postId}),
+                this.safePublish('DELETE_COUNT_COMMENT', {postId: data.id}),
+                this.safePublish('DELETE_POST_PAGE', '')
+            ])
+            result.forEach((task) => {
+                if (task.status === 'rejected') console.error(task.reason)
+            })
 
             return new Empty()
 

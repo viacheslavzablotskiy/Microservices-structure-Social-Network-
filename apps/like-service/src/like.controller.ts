@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { LikeService } from './like.service';
+import { LikeService } from './providers/like.service';
 import { GrpcMethod } from '@nestjs/microservices';
 import { Like_Proto_Entity } from '@repo/user-interfaces';
 import { Empty } from "google-protobuf/google/protobuf/empty_pb";

@@ -13,12 +13,13 @@
 
 // hello('g')
 
-{
-    let s  = 20
-
-    setTimeout(() => console.log(s))
-
-    s = 25
-
-    setTimeout(() => console.log(s))
+async function l() {
+    const data = new Promise((resolve) => {
+        resolve(10)
+    }).then(json => console.log(json)
+    )
+    return data
 }
+
+console.log(l());
+

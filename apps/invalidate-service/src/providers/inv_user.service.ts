@@ -19,25 +19,27 @@ export class InvalidateUserService implements OnModuleInit, OnModuleDestroy {
       const conn = await this.connectionService.getConnection()
       this.channel = await conn.createChannel()
 
+      const cacheExchange = this.configService.get<string>('CACHE_EXCHANGE') || ''
+      const dlxExchange = this.configService.get<string>('DLX_EXCHANGE') || ''
+      const dlxRoutingKey = this.configService.get<string>('DLX_ROUTING_KEY') || ''
+      const dlxQueue = this.configService.get<string>('DLX_QUEUE') || ''
 
-      await this.connectionService.initDLX(
-        this.channel, this.configService.get<string>('DLX_EXCHANGE') || '', this.configService.get<string>('DLX_QUEUE') || '',
-        this.configService.get<string>('DLX_ROUTING_KEY') || '' 
-      )
-
-      await this.connectionService.initQueue(
-        this.channel, this.configService.get<string>('CACHE_EXCHANGE') || '', this.configService.get<string>('USER_QUEUE') || '',
-        this.configService.get<string>('USER_ROUTING_KEY') || '', this.configService.get<string>('DLX_EXCHANGE') || '',
-        this.configService.get<string>('DLX_ROUTING_KEY') || ''
-      )
+      const userLoginQueue = this.configService.get<string>('USER_QUEUE') || ''
+      const userLoginKey = this.configService.get<string>('USER_ROUTING_KEY') || ''
+    
+      if (!dlxExchange || !dlxQueue || !dlxRoutingKey || !cacheExchange || !userLoginKey || !userLoginQueue) {
+      throw new Error('Missing RabbitMQ configuration');
+    }
+      await Promise.all([
+        this.connectionService.initDLX(this.channel, dlxExchange, dlxQueue, dlxRoutingKey),
+        this.connectionService.initQueue(this.channel, cacheExchange, userLoginQueue, userLoginKey, dlxExchange, dlxRoutingKey)
+      ])
 
       await this.channel.consume(this.configService.get<string>('USER_QUEUE') || '', async (consumeMessage) => {
         if (!consumeMessage) return 
         const payload: {email: string} = JSON.parse(consumeMessage.content.toString())
-
         try {
           await this.delUserCache(payload.email)
-
           this.channel.ack(consumeMessage)
         } catch (error) {
           this.channel.nack(consumeMessage, false, false)

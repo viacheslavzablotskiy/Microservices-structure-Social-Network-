@@ -19,16 +19,22 @@ export class InvalidateLikeService implements OnModuleInit, OnModuleDestroy {
       const conn = await this.connectionService.getConnection()
       this.channel = await conn.createChannel()
 
-      await this.connectionService.initDLX(
-        this.channel, this.configService.get<string>('DLX_EXCHANGE') || '', this.configService.get<string>('DLX_QUEUE') || '',
-        this.configService.get<string>('DLX_ROUTING_KEY') || '' 
-      )
+      const cacheExchange = this.configService.get<string>('CACHE_EXCHANGE') || ''
+      const dlxExchange = this.configService.get<string>('DLX_EXCHANGE') || ''
+      const dlxRoutingKey = this.configService.get<string>('DLX_ROUTING_KEY') || ''
+      const dlxQueue = this.configService.get<string>('DLX_QUEUE') || ''
 
-      await this.connectionService.initQueue(
-        this.channel, this.configService.get<string>('CACHE_EXCHANGE') || '', this.configService.get<string>('LIKE_COUNT_QUEUE') || '',
-        this.configService.get<string>('LIKE_COUNT_ROUTING_KEY') || '', this.configService.get<string>('DLX_EXCHANGE') || '',
-        this.configService.get<string>('DLX_ROUTING_KEY') || ''
-      ) 
+      const likeCountQueue = this.configService.get<string>('LIKE_COUNT_QUEUE') || ''
+      const likeCountKey = this.configService.get<string>('LIKE_COUNT_ROUTING_KEY') || ''
+
+      if (!dlxExchange || !dlxQueue || !dlxRoutingKey || !cacheExchange || !likeCountKey || !likeCountQueue) {
+      throw new Error('Missing RabbitMQ configuration');
+      }
+    
+      await Promise.all([
+      this.connectionService.initDLX(this.channel, dlxExchange, dlxQueue, dlxRoutingKey),
+      this.connectionService.initQueue(this.channel, cacheExchange, likeCountQueue,likeCountKey, dlxExchange,dlxRoutingKey) 
+      ])
 
       await this.channel.prefetch(10)
 

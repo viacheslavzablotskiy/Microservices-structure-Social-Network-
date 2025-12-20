@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LikeEntity } from './entities/like.entity';
+import { LikeEntity } from '../entities/like.entity';
 import { DataSource, In, Repository } from 'typeorm';
 import {type Like_Proto_Entity} from '@repo/user-interfaces'
 import {convertDateToTimeStamp, ReturnLikeCountData} from '@repo/proto'
@@ -9,20 +9,47 @@ import {ConnectionService} from '@repo/rabbitmq-package'
 import * as amqp from 'amqplib'
 import { ConfigService } from '@nestjs/config';
 
+
+const KeyRouting = {
+  DELETE_POST_PAGE_CACHE: 'POST_PAGE_CACHE_ROUTING_KEY',
+  LIKE_COUNT_CACHE: 'LIKE_COUNT_ROUTING_KEY'
+} as const
+type RountingKeysValues = keyof typeof KeyRouting
+type PayloadMap = {
+  DELETE_POST_PAGE_CACHE: '',
+  LIKE_COUNT_CACHE: {postId: number}
+}
+type Payload<K extends RountingKeysValues> = PayloadMap[K]
+
 @Injectable()
 export class LikeService implements OnModuleInit, OnModuleDestroy{
   private channel: amqp.ConfirmChannel
-
+  private exchangeName: string 
+  private routingsKeys: Record<RountingKeysValues, string>
   constructor(
     @InjectRepository(LikeEntity) private readonly reposotoryLike: Repository<LikeEntity>,
     private readonly cacheService: CacheService,
     private readonly connectionService: ConnectionService ,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   async onModuleInit() {
     const conn = await this.connectionService.getConnection()
     this.channel = await conn.createConfirmChannel()
+    this.exchangeName = this.configService.get<string>('CACHE_EXCHANGE') || ''
+
+    this.routingsKeys = {
+      DELETE_POST_PAGE_CACHE: this.configService.get<string>('POST_PAGE_CACHE_ROUTING_KEY') || '',
+      LIKE_COUNT_CACHE: this.configService.get<string>('LIKE_COUNT_ROUTING_KEY') || ''
+    }
+  }
+
+  async safePublish<K extends RountingKeysValues>(routingKey: K, payload: Payload<K>) {
+    try {
+      await this.connectionService.publish(this.channel, this.exchangeName, this.routingsKeys[routingKey], payload)
+    } catch (error) {
+      throw new Error('error occured by this reason: ', error)
+    }
   }
 
   async createNewLike(data: Omit<Like_Proto_Entity, 'createdAt' | 'id'>): Promise<Like_Proto_Entity> {
@@ -34,10 +61,15 @@ export class LikeService implements OnModuleInit, OnModuleDestroy{
     })
     const {createdAt, ...otherData} = await this.reposotoryLike.save(creationData)
 
-    await this.connectionService.publish(this.channel, this.configService.get<string>('CACHE_EXCHANGE') || '',
-    this.configService.get<string>('LIKE_COUNT_ROUTING_KEY') || '', {postId: otherData.postId})
-    .catch((error) => console.error(error)
-    ) 
+
+    const result = await Promise.allSettled([
+      this.safePublish('DELETE_POST_PAGE_CACHE', ''),
+      this.safePublish('LIKE_COUNT_CACHE', {postId: otherData.postId})
+    ]) 
+    result.forEach((task) => {
+      if (task.status === 'rejected') console.error(task.reason);
+    })
+
 
     return {
       ...otherData,
@@ -59,8 +91,16 @@ export class LikeService implements OnModuleInit, OnModuleDestroy{
         if (response.affected === 0) {
           throw new BadRequestException('there is any like to delete')
         }
-        await this.connectionService.publish(this.channel, this.configService.get<string>('CACHE_EXCHANGE') || '',
-        this.configService.get<string>('LIKE_COUNT_ROUTING_KEY') || '', {postId: data.postId}).catch(error => console.error(error))
+        
+        const result = await Promise.allSettled([
+          this.safePublish('DELETE_POST_PAGE_CACHE', ''),
+          this.safePublish('LIKE_COUNT_CACHE', {postId: data.postId})
+        ]);
+
+        result.forEach((value) => {
+          if (value.status === 'rejected') console.error(value.reason);
+        })
+        
     } catch (error) {
         console.error(error);
     }

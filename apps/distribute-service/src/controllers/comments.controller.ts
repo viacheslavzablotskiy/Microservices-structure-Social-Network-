@@ -82,3 +82,9 @@ export class MainCommentController {
         await this.commentService.deleteComment({userId: req.user.userId, id: Number(id), postId: Number(postId)})
     }
 }
+
+
+async function log(data: number): Promise<number> {
+    const result = await new Promise((resolve) => {resolve(data)}).then((data: number) => data)
+    return result
+}
