@@ -21,9 +21,9 @@ export class ConnectionService implements OnModuleInit, OnModuleDestroy {
     async publish(channel: amqp.ConfirmChannel, exchangeName: string, exchangeRoutingKey: string, payload: any): Promise<void> {
         const buffer = Buffer.from(JSON.stringify(payload))
         return new Promise<void>((resolve, reject) => {
-            channel.publish(exchangeName, exchangeRoutingKey, buffer, {persistent: true}, (ok, error) => {
+            channel.publish(exchangeName, exchangeRoutingKey, buffer, {persistent: true}, (error) => {
                 if (error) reject(error);
-                else resolve(ok)
+                else resolve()
             })
         })
     }

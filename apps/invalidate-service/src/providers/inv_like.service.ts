@@ -53,7 +53,7 @@ export class InvalidateLikeService implements OnModuleInit, OnModuleDestroy {
 
     }
 
-    async delLikeCountCache(postId: number): Promise<void> {
+    async delLikeCountCache(postId: number): Promise<void> {    
       await this.cacheSerivce.del(`postId:${postId}:like:count`)
     }
 

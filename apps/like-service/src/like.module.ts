@@ -7,6 +7,7 @@ import { LikeEntity } from './entities/like.entity';
 import {CachePackageMdoule} from '@repo/chache-package'
 import { ClientsModule, Transport } from '@nestjs/microservices'
 import {ConnectionModule} from "@repo/rabbitmq-package"
+import { EventLikeSerivce } from './providers/event.service';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -40,6 +41,6 @@ import {ConnectionModule} from "@repo/rabbitmq-package"
     })
   ],
   controllers: [LikeController],
-  providers: [LikeService],
+  providers: [LikeService, EventLikeSerivce],
 })
 export class AppModule {}

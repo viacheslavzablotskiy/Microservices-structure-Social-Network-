@@ -142,23 +142,22 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
                 throw new BadRequestException('there is no any post with that id to delete')
             }
             const cacheFirstPage = await this.cacheServie.get<Post_Enitity_Proto[]>(this.cacheKeyPostPage)
-            if (!cacheFirstPage) return new Empty()
+            const isInFirstPage = cacheFirstPage?.some((value) => {return value.id === data.id}) ?? false // value.id === data.id
+            const tasks = [
+                this.safePublish('COMMENT_DEL_PAGE', {postId: data.id}),
+                this.safePublish('COMMENT_DEL_COUNT', {postId: data.id}),
+                this.safePublish('DELETE_COMMENTS', {postId: data.id}),
+                this.safePublish('LIKE_COUNT', {postId: data.id}),
+                this.safePublish('DELETE_LIKES', {postId: data.id}),
+            ]
 
-            const setOfPostIds = new Set(cacheFirstPage.map(post => post.id))
-            if (setOfPostIds.has(data.id)) {
-                const tasks = [
-                    this.safePublish('COMMENT_DEL_PAGE', {postId: data.id}),
-                    this.safePublish('COMMENT_DEL_COUNT', {postId: data.id}),
-                    this.safePublish('DELETE_COMMENTS', {postId: data.id}),
-                    this.safePublish('LIKE_COUNT', {postId: data.id}),
-                    this.safePublish('DELETE_LIKES', {postId: data.id}),
-                    this.safePublish('POST_PAGE_CACHE', '')
-                ]
-                const result = await Promise.allSettled(tasks)
-                result.forEach(task => {
-                    if (task.status === 'rejected') console.error(task.reason)                    
-                });
+            if (isInFirstPage) {
+                tasks.push(this.safePublish('POST_PAGE_CACHE', ''))
             }
+
+            const response = await Promise.allSettled(tasks)
+            response.forEach((value) => {if (value.status === 'rejected') console.error(value.reason)})
+                
             return new Empty()
         } catch (error) {
             console.error(error);

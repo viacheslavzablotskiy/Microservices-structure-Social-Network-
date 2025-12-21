@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import * as amqp from 'amqplib'
 import {CacheService} from '@repo/chache-package'
 import {ConfigService} from '@nestjs/config'
@@ -12,7 +12,6 @@ export class InvalidatePostService implements OnModuleInit, OnModuleDestroy {
         private readonly cacheService: CacheService,
         private readonly configService: ConfigService,
         private readonly connectionService: ConnectionService,
-        private readonly logger: Logger
     ) {}
 
     async onModuleInit() {
@@ -45,13 +44,15 @@ export class InvalidatePostService implements OnModuleInit, OnModuleDestroy {
         await this.connectionService.initDLX(this.channel, dlxEchange, dlxQueue,dlxRoutingKey),
         await this.connectionService.initQueue(this.channel, cacheExchange, postPageQueue,postPageKey, dlxEchange, dlxRoutingKey)
 
+        this.channel.prefetch(10)
+
         this.channel.consume(this.configService.get<string>('POST_PAGE_CACHE_QUEUE') || '', async (consumeMessage) => {
             if (!consumeMessage) return
             try {
                 await this.delPostPageCache()
                 this.channel.ack(consumeMessage)
             } catch (error) {
-                this.logger.error('Failed invalidated error: ', error)
+                console.error(error);
                 this.channel.nack(consumeMessage, false, false)
             }
         })

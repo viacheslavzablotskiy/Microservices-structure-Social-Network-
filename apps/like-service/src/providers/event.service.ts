@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import * as amqp from 'amqplib'
 import { ConnectionService } from "@repo/rabbitmq-package";
 import { ConfigService } from "@nestjs/config";
@@ -16,7 +16,6 @@ export class EventLikeSerivce implements OnModuleInit, OnModuleDestroy {
         @InjectRepository(LikeEntity) private readonly repositoryLike: Repository<LikeEntity>,
         private readonly connectionService: ConnectionService,
         private readonly configService: ConfigService,
-        private readonly logger: Logger,
     ) {}
 
     async onModuleInit() {
@@ -30,25 +29,37 @@ export class EventLikeSerivce implements OnModuleInit, OnModuleDestroy {
 
         const likesDeleteQueue = this.configService.get<string>('LIKES_DELETE_QUEUE') || ''
         const likesDeleteKey = this.configService.get<string>('LIKES_DELETE_ROUTING_KEY') || ''
+             
+
+        if (!dlxExchange || !dlxQueue || !dlxRoutingKey || !cacheExchange || !likesDeleteKey || !likesDeleteQueue) {
+      throw new Error('Missing RabbitMQ configuration');
+      }
 
         await Promise.all([
             this.connectionService.initDLX(this.channel, dlxExchange, dlxQueue, dlxRoutingKey),
             this.connectionService.initQueue(this.channel, cacheExchange, likesDeleteQueue, likesDeleteKey, dlxExchange, dlxRoutingKey)
         ])
 
-        this.channel.consume(likesDeleteQueue, async (consumeMessage) => {
-            if (!consumeMessage) return
-            const payload: {postid: number} = JSON.parse(consumeMessage.content.toString())
+        this.channel.prefetch(10)
 
+        this.channel.consume(likesDeleteQueue, async (consumeMessage) => {
+            console.log('hello i like service');
+            if (!consumeMessage) return
+            const payload: {postId: number} = JSON.parse(consumeMessage.content.toString())
+            console.log(payload);
             try {
-                
+                await this.deleteAllLikes(payload.postId)
+                this.channel.ack(consumeMessage)               
             } catch (error) {
-                
+                console.error(error);
+                this.channel.nack(consumeMessage, false, false)
             }
         })
     }
 
     async deleteAllLikes(postId: number): Promise<void> {
+        console.log('we delet elike under this post: ', postId);
+        
         await this.repositoryLike.delete({postId: postId})
     }
 

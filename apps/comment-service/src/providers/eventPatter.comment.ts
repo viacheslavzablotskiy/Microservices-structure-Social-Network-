@@ -30,6 +30,10 @@ export class EventCommentService implements OnModuleInit, OnModuleDestroy{
         const deleteCommentsQueue = this.configService.get<string>('DELETE_COMMENTS_QUEUE') || ''
         const deleteCommentsKey = this.configService.get<string>('DELETE_COMMENT_KEY') || ''
 
+        if (!dlxExchange || !dlxQueue || !dlxRoutingKey || !cacheExchange || !deleteCommentsKey || !deleteCommentsQueue) {
+      throw new Error('Missing RabbitMQ configuration');
+      }
+
         await Promise.all([
             this.connectionService.initDLX(this.channel, dlxExchange, dlxQueue,dlxRoutingKey),
             this.connectionService.initQueue(this.channel, cacheExchange, deleteCommentsQueue,deleteCommentsKey, dlxExchange, dlxRoutingKey) 
@@ -37,10 +41,10 @@ export class EventCommentService implements OnModuleInit, OnModuleDestroy{
 
         this.channel.prefetch(10)
 
-        await this.channel.consume(this.configService.get<string>('DELETE_COMMENTS_QUEUE') || '', async (consumeMessage) => {
+        await this.channel.consume(this.configService.get<string>('DELETE_COMMENTS_QUEUE') || '', async (consumeMessage) => {            
             if (!consumeMessage) return
             const payload: {postId: number} = JSON.parse(consumeMessage.content.toString())
-
+            console.log('you want to delete comments under the post', payload);
             try {
                 await this.deleteAllComment({postId: payload.postId})
 

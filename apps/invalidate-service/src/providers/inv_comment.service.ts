@@ -50,10 +50,14 @@ export class InvalidateCommentService implements OnModuleInit, OnModuleDestroy{
             this.connectionService.initQueue(this.channel, cacheExchange, commentPageQueue, commentPageKey, dlxEchange, dlxRoutingKey)
         ])
 
+        this.channel.prefetch(10) 
+
+
         await this.channel.consume(commentCountQueue, async (consumeMessage) => {
             if (!consumeMessage) return
             const payload: {postId: number} = JSON.parse(consumeMessage.content.toString())
             try {
+                console.log('comment_cache: ', payload);
                 await this.delCommentCountCache(payload.postId)
                 this.channel.ack(consumeMessage)
             } catch (error) {
