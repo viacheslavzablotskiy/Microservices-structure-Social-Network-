@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
-import {ZodValidationPipe} from '@repo/api'
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseFilters } from '@nestjs/common';
+import {RpcExceptionFilter, ZodValidationPipe} from '@repo/api'
 import {RegisterSchema, type RegisterSchemaUser, LoginScema, type LoginScemaUser, User_Login_Data} from '@repo/user-interfaces'
 import {NewAccessToken, type RefreshData, User_after_auth_service_login} from '@repo/proto'
 import { AuthService } from './app.service';
 import {type Request, type Response } from 'express';
-import { GrpcMethod } from '@nestjs/microservices';
+import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { Empty} from 'google-protobuf/google/protobuf/empty_pb'
 
 @Controller('auth')
@@ -15,31 +15,35 @@ export class AppController {
 
   @GrpcMethod('DistAuthPathService', 'RegisterUser')
   async registerUser(data: {login: string, email: string, password: string}): Promise<Empty> {
-
-    console.log('we already in auth-service');
-    
-
-    await this.authService.createNewUserViaRegistration(data)
-    return new Empty()
+    try {
+      await this.authService.createNewUserViaRegistration(data)
+      return new Empty()
+    } catch (error) {
+       throw new RpcException('Invalid Register Data')
+    }
   }
 
 
   @GrpcMethod('DistAuthPathService', 'LoginUser')
+  @UseFilters(new RpcExceptionFilter())
   async loginUser(data: LoginScemaUser): Promise<Omit<User_after_auth_service_login, 'email' | 'passwordHash'>> {
+    try {
+      const response = await this.authService.loginUser(data)
     
-    const response = await this.authService.loginUser(data)
-    
-    const access_token = await this.authService.getNewAccessToken(response)
+      const access_token = await this.authService.getNewAccessToken(response)
 
-    const refresh_token = await this.authService.getNewRefreshToken(response)
+      const refresh_token = await this.authService.getNewRefreshToken(response)
 
-    const {email, passwordHash, ...otherData} = response
-    console.log({...otherData, access_token, refresh_token});
+      const {email, passwordHash, ...otherData} = response
+      console.log({...otherData, access_token, refresh_token});
     
     return  {
       ...otherData,
       accessToken: access_token,
       refreshToken: refresh_token
+    }
+    } catch (error) {
+      throw new RpcException('invalid data: Invalid password || Invalid the user data')
     }
     
   }
@@ -47,11 +51,11 @@ export class AppController {
 
   @GrpcMethod('DistAuthPathService', 'RefreshToken')
   async refreshToken(data: RefreshData): Promise<NewAccessToken> {
-    if (!data) throw new UnauthorizedException('You dont authorizited(refresh_token)')
-    
-    const response = await this.authService.recreationAccessToken(data.refreshToken)
-
-    return response
+    try {
+        return await this.authService.recreationAccessToken(data.refreshToken)
+    } catch (error) {
+      throw new RpcException('You dont have data || invalid creation token')
+    }
   }
 
 }

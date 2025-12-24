@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable, OnModuleDestroy, OnModuleInit 
 import { InjectRepository } from '@nestjs/typeorm';
 import { LikeEntity } from '../entities/like.entity';
 import { DataSource, In, Repository } from 'typeorm';
-import {type Like_Proto_Entity} from '@repo/user-interfaces'
+import {Post_Enitity_Proto, type Like_Proto_Entity} from '@repo/user-interfaces'
 import {convertDateToTimeStamp, ReturnLikeCountData} from '@repo/proto'
 import {CacheService} from '@repo/chache-package'
 import {ConnectionService} from '@repo/rabbitmq-package'
@@ -26,6 +26,7 @@ export class LikeService implements OnModuleInit, OnModuleDestroy{
   private channel: amqp.ConfirmChannel
   private exchangeName: string 
   private routingsKeys: Record<RountingKeysValues, string>
+  private postPageRedisKey: string
   constructor(
     @InjectRepository(LikeEntity) private readonly reposotoryLike: Repository<LikeEntity>,
     private readonly cacheService: CacheService,
@@ -37,6 +38,8 @@ export class LikeService implements OnModuleInit, OnModuleDestroy{
     const conn = await this.connectionService.getConnection()
     this.channel = await conn.createConfirmChannel()
     this.exchangeName = this.configService.get<string>('CACHE_EXCHANGE') || ''
+
+    this.postPageRedisKey = this.configService.get<string>('CACHE_KEY_POST_PAGE1') || '' 
 
     this.routingsKeys = {
       DELETE_POST_PAGE_CACHE: this.configService.get<string>('POST_PAGE_CACHE_ROUTING_KEY') || '',
@@ -61,11 +64,15 @@ export class LikeService implements OnModuleInit, OnModuleDestroy{
     })
     const {createdAt, ...otherData} = await this.reposotoryLike.save(creationData)
 
+    const firstPage = await this.cacheService.get<Post_Enitity_Proto[]>(this.postPageRedisKey)
+    const inFirstPage = firstPage?.some((post) => {return post.id === otherData.postId}) ?? false
 
-    const result = await Promise.allSettled([
-      this.safePublish('DELETE_POST_PAGE_CACHE', ''),
+    const task = [
       this.safePublish('LIKE_COUNT_CACHE', {postId: otherData.postId})
-    ]) 
+    ]
+    if (inFirstPage) task.push(this.safePublish('DELETE_POST_PAGE_CACHE', ''))
+
+    const result = await Promise.allSettled([task]) 
     result.forEach((task) => {
       if (task.status === 'rejected') console.error(task.reason);
     })
@@ -91,14 +98,18 @@ export class LikeService implements OnModuleInit, OnModuleDestroy{
         if (response.affected === 0) {
           throw new BadRequestException('there is any like to delete')
         }
-        
-        const result = await Promise.allSettled([
-          this.safePublish('DELETE_POST_PAGE_CACHE', ''),
-          this.safePublish('LIKE_COUNT_CACHE', {postId: data.postId})
-        ]);
+
+        const firstPage = await this.cacheService.get<Post_Enitity_Proto[]>(this.postPageRedisKey)
+        const isInFirstPage = firstPage?.some((post) => {return post.id === data.postId}) ?? false
+        const task = [
+            this.safePublish('LIKE_COUNT_CACHE', {postId: data.postId})
+        ]
+        if (isInFirstPage) task.push(this.safePublish('LIKE_COUNT_CACHE', {postId: data.postId}))
+
+        const result = await Promise.allSettled([task])
 
         result.forEach((value) => {
-          if (value.status === 'rejected') console.error(value.reason);
+          if (value.status === 'rejected') console.error('task failed', value.reason);
         })
         
     } catch (error) {

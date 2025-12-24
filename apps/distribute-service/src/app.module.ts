@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './providers/auth.service';
 import {ConfigModule, ConfigService} from '@nestjs/config'
@@ -12,6 +12,7 @@ import { MainLikeController } from './controllers/like.controller';
 import { MainPostCOntriller } from './controllers/post.controller';
 import { MainPostService } from './providers/post.service';
 import { LikeMainService } from './providers/like.service';
+import { AuthLoggerMiddlware, AuthTokenAuthorization } from './distribute.middleware';
 
 @Module({
   imports: [
@@ -72,4 +73,11 @@ import { LikeMainService } from './providers/like.service';
   controllers: [AuthController, MainCommentController, MainPostCOntriller, MainLikeController],
   providers: [AuthService, MainCommentService, MainPostService, LikeMainService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthLoggerMiddlware).exclude().forRoutes(AuthController)
+    consumer.apply(AuthLoggerMiddlware, AuthTokenAuthorization).exclude().forRoutes(MainLikeController,
+      MainCommentController, MainPostCOntriller
+    )
+  }
+}

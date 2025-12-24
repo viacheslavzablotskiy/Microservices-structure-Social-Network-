@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotAcceptableException, OnModuleDestroy, OnModuleInit, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { CommentEnity_Proto } from "@repo/user-interfaces";
+import { CommentEnity_Proto, Post_Enitity_Proto } from "@repo/user-interfaces";
 import { CommentEnity } from "src/entitis/comment.entity";
 import { Repository } from "typeorm";
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
@@ -8,6 +8,7 @@ import { convertDateToTimeStamp } from "@repo/proto";
 import * as amqp from 'amqplib'
 import {ConnectionService} from '@repo/rabbitmq-package'
 import { ConfigService } from "@nestjs/config";
+import { CacheService } from "@repo/chache-package";
 
 
 const ROUTING_KEY = {
@@ -28,11 +29,13 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
     private channel: amqp.ConfirmChannel
     private exchangeName: string
     private routingsKeys: Record<RoutingKeys, string>
+    private postPageKeyRedis: string
 
     constructor(
         @InjectRepository(CommentEnity) private readonly repositoryComment: Repository<CommentEnity>,
         private readonly configService: ConfigService,
-        private readonly connectionService: ConnectionService
+        private readonly connectionService: ConnectionService,
+        private readonly cacheService: CacheService
     ) {}
 
     async onModuleInit() {
@@ -40,6 +43,7 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
         this.channel = await conn.createConfirmChannel()
 
         this.exchangeName = this.configService.get<string>('CACHE_EXCHANGE') || ''
+        this.postPageKeyRedis = this.configService.get<string>('CACHE_KEY_POST_PAGE1') || ''
 
         this.routingsKeys = {
             DELETE_POST_PAGE: this.configService.get<string>('POST_PAGE_CACHE_ROUTING_KEY') || '',
@@ -68,13 +72,18 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
             })
 
             const response = await this.repositoryComment.save(creationData)
-            
-           const result = await Promise.allSettled([
+
+            const posts = await this.cacheService.get<Post_Enitity_Proto[]>(this.postPageKeyRedis)
+            const inFirstPage = posts?.some((post) => {return post.id === response.postId}) ?? false
+
+            const task = [
                 this.safePublish('DELETE_COMMENT_PAGE', {postId: response.postId}),
                 this.safePublish('DELETE_COUNT_COMMENT', {postId: response.postId}),
-                this.safePublish('DELETE_POST_PAGE', '')
-           ])
-           result.forEach((task) => {
+            ]
+            if (inFirstPage) task.push(this.safePublish('DELETE_POST_PAGE', ''))
+            
+            const result = await Promise.allSettled(task)
+            result.forEach((task) => {
                 if (task.status === 'rejected') console.error(task.reason)
            })
 
@@ -123,11 +132,15 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
                 throw new BadRequestException('there was not comment with that id')
             }
 
-            const result = await Promise.allSettled([
+            const posts = await this.cacheService.get<Post_Enitity_Proto[]>(this.postPageKeyRedis)
+            const inFirstPage = posts?.some((post) => {return post.id === data.postId}) ?? false 
+            const tasks = [
                 this.safePublish('DELETE_COMMENT_PAGE', {postId: data.postId}),
                 this.safePublish('DELETE_COUNT_COMMENT', {postId: data.id}),
-                this.safePublish('DELETE_POST_PAGE', '')
-            ])
+            ]
+            if (inFirstPage) tasks.push(this.safePublish('DELETE_POST_PAGE', ''))
+
+            const result = await Promise.allSettled(tasks)
             result.forEach((task) => {
                 if (task.status === 'rejected') console.error(task.reason)
             })

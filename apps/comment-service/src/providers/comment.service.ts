@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommentEnity } from 'src/entitis/comment.entity';
-import { MoreThan, Repository } from 'typeorm';
+import { LessThan, MoreThan, Repository } from 'typeorm';
 import {CommentEnity_Proto} from '@repo/user-interfaces'
 import {convertCommentToProtoComment} from '../utils/convertCommentToProto'
 import { CommentReturnCount, ReturnCommentData } from '@repo/proto';
@@ -49,8 +49,9 @@ export class CommentService {
 
     async getOtherPartComment(data: {postId: number, lastId: number}): Promise<ReturnCommentData> {
       const initialData = await this.repositoryComment.find({
-        where: {postId: data.postId, id: MoreThan(data.lastId)},
-        take: 20
+        where: {postId: data.postId, id: LessThan(data.lastId)},
+        take: 20,
+        order: {id: 'DESC'}
       })
       const response = initialData.length === 0 ? [] : initialData.map((comment) => convertCommentToProtoComment(comment))
 
