@@ -1,5 +1,5 @@
 {
-  "name": "@repo/api",
+  "name": "@repo/rabbitmq-package",
   "version": "1.0.0",
   "license": "MIT",
    "scripts": {
@@ -37,8 +37,6 @@
   "peerDependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
-    "@grpc/grpc-js": "^1.14.0",
-    "@grpc/proto-loader": "^0.8.0",
     "zod": "^4.1.12",
     "@nestjs/config": "^4.0.2",
     "@nestjs/jwt": "^11.0.1",

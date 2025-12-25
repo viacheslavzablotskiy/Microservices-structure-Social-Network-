@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {Post_Enitity_Proto} from '@repo/user-interfaces'
 import { PostEntity } from '../entities/post.entity';
-import { MoreThan, Repository } from 'typeorm';
+import { LessThan, MoreThan, Repository } from 'typeorm';
 import {convertFromPostToProto} from '../utils/convertToProto'
 import { ReturnPostsDto } from '@repo/proto';
 import { CacheService } from '@repo/chache-package'; 
@@ -29,15 +29,15 @@ export class PostService {
 
     const posts = inital_part_posts.map((port) => convertFromPostToProto(port))
 
-    await this.cacheService.set(cacheKey, posts, 10_000)
+    await this.cacheService.set(cacheKey, posts, 0)
     
     return {posts: posts}
   }
 
   async getSomePartOfPost(lastId: number): Promise<ReturnPostsDto> {
     const next_part_of_post = await this.repositoryPost.find({
-      where: {id: MoreThan(lastId)},
-      order: {id: 'ASC'},
+      where: {id: LessThan(lastId)},
+      order: {id: 'DESC'},
       take: 20
     })
   

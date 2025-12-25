@@ -5,41 +5,50 @@ package distlike;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-
+//like service
 service DistLikeService {
-    rpc createNewLike (CreationData) returns (OutputData);
+    // create new like
+    rpc CreateNewLike (CreationData) returns (OutputData);
+    // delete like
     rpc DeleteLike (GetIdForLike) returns (google.protobuf.Empty);
+    // get count of the like under the post
     rpc GetCountOfLike(GetPostIds) returns (ReturnLikeDataCount);
 }
 
 
+// data for creation new post
 message CreationData {
-    int32 userId = 2;
-    int32 postId = 3;
+    int32 user_id = 2;
+    int32 post_id = 3;
 }
 
+// data that we get afrter we create new like 
 message OutputData {
     int32 id = 1;
-    int32 userId = 2;
-    int32  postId = 3;
-    google.protobuf.Timestamp createdAt = 4;
+    int32 user_id = 2;
+    int32  post_id = 3;
+    google.protobuf.Timestamp create_at = 4;
 }
 
+//  data to delete already exsiting like
 message GetIdForLike {
-    int32 postId = 1;
-    int32 userId = 2;
+    int32 post_id = 1;
+    int32 user_id = 2;
 }
 
+// data for get the info about count of the like under the some post
 message GetPostIds {
-    repeated int32 postIds = 1;
-    int32 reqUser = 2;
+    repeated int32 post_ids = 1;
+    int32 req_user = 2;
 }
 
+// data
 message MidstData {
     int32 like = 1;
-    bool isLiked = 2;
+    bool is_liked = 2;
 }
 
+// return data after PostIds
 message ReturnLikeDataCount {
     map<int32, MidstData> likes = 1;
 }

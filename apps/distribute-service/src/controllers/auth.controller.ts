@@ -1,11 +1,12 @@
-import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
 import { AuthService } from '../providers/auth.service';
-import {ZodValidationPipe} from '@repo/api';
+import {RpcExceptionFilter, ZodValidationPipe} from '@repo/api';
 import {LoginScema, RegisterSchema, type RegisterSchemaUser, type LoginScemaUser, User_Login_Data} from '@repo/user-interfaces'
 import { type Response } from 'express';
 import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoginDto, RegisterDto, LoginOutDto } from 'src/documentation_classes/auth.swagger';
 import {JWTAuthGuard} from '@repo/api'
+import { HttpEXceptionFilter } from 'src/custom.useFilter';
 
 @ApiTags('auth')
 @Controller()
@@ -30,6 +31,7 @@ export class AuthController {
   @ApiOperation({summary: 'Login', description: 'Login recently created user or already exiting'})
   @ApiBody({type: LoginDto})
   @ApiResponse({status: 201, description: 'You entered successfully', type: LoginOutDto})
+  @UseFilters(new HttpEXceptionFilter())
   async handleLoginUser(
     @Body(new ZodValidationPipe(LoginScema)) dto: LoginScemaUser, @Res({passthrough: true}) res: Response): Promise<Omit<User_Login_Data, 'refreshToken'>>
   {

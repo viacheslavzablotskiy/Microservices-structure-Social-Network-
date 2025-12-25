@@ -1,10 +1,11 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseFilters } from '@nestjs/common';
 import { CommentService } from '../providers/comment.service';
-import { GrpcMethod } from '@nestjs/microservices';
+import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { CommentEnity_Proto } from '@repo/user-interfaces';
 import { CrudCommentService } from '../providers/crud.comment.service';
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
 import { CommentReturnCount, ReturnCommentData } from '@repo/proto';
+import {RpcExceptionFilter} from '@repo/api'
 
 @Controller()
 export class CommentController {
@@ -15,33 +16,76 @@ export class CommentController {
 
     
   @GrpcMethod('DistCommentService', 'GetInitialCommentData')
+  @UseFilters(new RpcExceptionFilter())
   async getInitialCommentData(data: {postId: number}): Promise<ReturnCommentData> {
-    return await this.commentService.getInitialCommentData(data)
+    try {
+      return await this.commentService.getInitialCommentData(data)
+    } catch (error) {
+      if (error instanceof RpcException) {
+        throw new RpcException(error.getError())
+      } else throw new Error(error)
+    }
   }
 
   @GrpcMethod('DistCommentService', 'GetOtherCommentData')
+  @UseFilters(new RpcExceptionFilter())
   async getOtherCommentData(data: {postId: number, lastId: number}): Promise<ReturnCommentData> {
-    return await this.commentService.getOtherPartComment(data)
+    try {
+      return await this.commentService.getOtherPartComment(data)
+    } catch (error) {
+      if (error instanceof RpcException) {
+        throw new RpcException(error.getError())
+      } else throw new Error(error)
+    }
   }
 
   @GrpcMethod('DistCommentService', 'CreateNewComment')
+  @UseFilters(new RpcExceptionFilter())
   async createNewComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'id'>) : Promise<CommentEnity_Proto> {
-    return await this.crudCommentService.createNewComment(data)
+    try {
+      return await this.crudCommentService.createNewComment(data)
+    } catch (error) {
+      if (error instanceof RpcException) {
+        throw new RpcException(error.getError())
+      } else throw new Error(error)
+    }
   }
 
   @GrpcMethod('DistCommentService', 'UpdateComment')
+  @UseFilters(new RpcExceptionFilter())
   async updateComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'postId'>): Promise<CommentEnity_Proto> {
-    return await this.crudCommentService.updateComment(data)
+    try {
+      return await this.crudCommentService.updateComment(data)
+    } catch (error) {
+      if (error instanceof RpcException) {
+        throw new RpcException(error.getError())
+      } else throw new Error(error)
+    }
   }
 
-  @GrpcMethod('DistCommentService', 'deleteComment')
-  async deleteComment(data: {id: number, userId: number}) : Promise<Empty> {
-    return await this.crudCommentService.deleteComment(data)
+  @GrpcMethod('DistCommentService', 'DeleteComment')
+  @UseFilters(new RpcExceptionFilter())
+  async deleteComment(data: {id: number, userId: number, postId: number}) : Promise<Empty> {
+    try {
+      console.log(data);
+      return await this.crudCommentService.deleteComment(data)
+    } catch (error) {
+      if (error instanceof RpcException) {
+        throw new RpcException(error.getError())
+      } else throw new Error(error)
+    }
   }
 
   @GrpcMethod('DistCommentService', 'GetCountofLike')
+  @UseFilters(new RpcExceptionFilter())
   async getCountofLike(data: {postIds: number[]}) : Promise<CommentReturnCount> {  
-    return await this.commentService.getCountofComment(data.postIds)
+    try {
+      return await this.commentService.getCountofComment(data.postIds)
+    } catch (error) {
+      if (error instanceof RpcException) {
+        throw new RpcException(error.getError())
+      } else throw new Error(error)
+    }
   }
   
 }

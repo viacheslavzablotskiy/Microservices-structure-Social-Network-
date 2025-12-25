@@ -3,7 +3,7 @@ import {type LoginScemaUser, type RegisterSchemaUser} from '@repo/user-interface
 import {firstValueFrom} from 'rxjs'
 import * as bcrypt from 'bcrypt'
 import { AuthCreationToken } from '@repo/api';
-import { type ClientGrpc } from '@nestjs/microservices';
+import { RpcException, type ClientGrpc } from '@nestjs/microservices';
 import {fromProtoRoleToEntity, convertTimeStampToDate, AuthServiceProto, User_Entity_After_Proto_UserEmail} from '@repo/proto'
 
 @Injectable()
@@ -25,52 +25,30 @@ export class AuthService implements OnModuleInit{
 
 
   async createNewUserViaRegistration(dto: Omit<RegisterSchemaUser, 'passwordConfirm'>): Promise<void> {
-    console.log('we already in method of the resiter new user');
-
-    await  firstValueFrom(this.authServiceProto.registerUser({
-      login: dto.login,
-      email: dto.email,
-      password: dto.password
-    }))
-
-    console.log('we return nothing to you');
-    
+    await firstValueFrom(this.authServiceProto.registerUser({login: dto.login, email: dto.email, password: dto.password}))   
   }
 
   async loginUser(dto: LoginScemaUser): Promise<User_Entity_After_Proto_UserEmail>{
-
-    console.log('we before gRPC');
-    
-    const responesFromServer = await firstValueFrom(this.authServiceProto.getUserByEmail({email: dto.email}))   
-    
-    console.log(responesFromServer);
-    
-
-    const isMatch = await bcrypt.compare(dto.password, responesFromServer.passwordHash)
-
-    console.log(isMatch);
-    
-    if (!isMatch) throw new BadRequestException('Invalid password')
-      
-    return responesFromServer
-    
+      const responesFromServer = await firstValueFrom(this.authServiceProto.getUserByEmail({email: dto.email}))
+      const isMatch = await bcrypt.compare(dto.password, responesFromServer.passwordHash)
+      if (!isMatch) {
+        throw new RpcException('Invalid password')
+      }
+      return responesFromServer
   }
 
   async getNewAccessToken(dto: User_Entity_After_Proto_UserEmail): Promise<{accessToken: string}> {
-    const response = this.creationToken.creationAccessToken({id: dto.id, login: dto.login})
-    return response
+    return this.creationToken.creationAccessToken({id: dto.id, login: dto.login})
+    
   }
 
   async getNewRefreshToken(dto: User_Entity_After_Proto_UserEmail): Promise<{refreshToken: string}> {
-    const resonse = this.creationToken.createtionRefreshToken({id: dto.id, login: dto.login})
-    return resonse
+    return this.creationToken.createtionRefreshToken({id: dto.id, login: dto.login})
   }
 
 
   async recreationAccessToken(refreshToken: string) {
-    try {
       const payload = await this.creationToken.getDataFromRefreshToken(refreshToken) 
-
       const response = await firstValueFrom(this.authServiceProto.getUserById({id: payload.id}))
 
       const correct_data = {...response, 
@@ -79,11 +57,6 @@ export class AuthService implements OnModuleInit{
       updatedAt: convertTimeStampToDate(response.updatedAt),
     }
       
-      return await this.creationToken.creationAccessToken(correct_data)
-
-    } catch (error) {
-      throw new UnauthorizedException(error)
-    }
-    
+      return this.creationToken.creationAccessToken(correct_data)
   }
 }

@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { LikeController } from './like.controller';
-import { LikeService } from './like.service';
+import { LikeService } from './providers/like.service';
 import {ConfigModule, ConfigService} from '@nestjs/config'
 import {TypeOrmModule} from '@nestjs/typeorm'
 import { LikeEntity } from './entities/like.entity';
 import {CachePackageMdoule} from '@repo/chache-package'
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ClientsModule, Transport } from '@nestjs/microservices'
+import {ConnectionModule} from "@repo/rabbitmq-package"
+import { EventLikeSerivce } from './providers/event.service';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -33,30 +35,12 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         REDIS_URL: config.get<string>('REDIS_URL_PATH') || '' 
       })
     }),
-    ClientsModule.register([
-      {
-        name: 'DELETE_LIKE_COUNT_CACHE',
-        transport: Transport.RMQ,
-        options: {
-        urls:  ['amqp://localhost:5672'],
-          queue: 'like.count.queue',
-          exchange: 'cache_exchange',
-          exchangeType: 'direct',
-          queueOptions: {
-            durable: true,
-            autoDelete: false,
-            arguments: {
-              'x-message-ttl' : 60000, //x-message-age: <> for stream queue
-              'x-max-length': 1000, // x-message-length-bytes: <> for stream queue
-              'x-dead-letter-exchange': 'errors_exchange',
-              'x-dead-letter-routing-key': 'errors_key'
-            }
-        }
-      }
-      }
-    ])
+    ConnectionModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({RABBITMQ_URL: config.get<string>('RABBIT_MQ_PATH') || ''})
+    })
   ],
   controllers: [LikeController],
-  providers: [LikeService],
+  providers: [LikeService, EventLikeSerivce],
 })
 export class AppModule {}

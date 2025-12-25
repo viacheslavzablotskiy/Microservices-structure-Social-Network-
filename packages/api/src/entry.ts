@@ -8,3 +8,5 @@ export * from './authStrategy/authJWTGuard' // handle Request - method of tha Au
 export * from './authStrategy/authSignJWT' // creaton of the token, have 1 log
 export * from './authStrategy/authStrategy.guard' // main Strategy of the AuthGuard('jwt')
 
+
+export * from './grpEceptionFilter/grpsExceptionFilter'
