@@ -29,11 +29,11 @@ export class AuthService implements OnModuleInit{
   }
 
   async loginUser(dto: LoginScemaUser): Promise<User_Entity_After_Proto_UserEmail>{
-      const responesFromServer = await firstValueFrom(this.authServiceProto.getUserByEmail({email: dto.email})) 
-
+      const responesFromServer = await firstValueFrom(this.authServiceProto.getUserByEmail({email: dto.email}))
       const isMatch = await bcrypt.compare(dto.password, responesFromServer.passwordHash)
-      if (!isMatch) throw new RpcException('Invalid password')
-        
+      if (!isMatch) {
+        throw new RpcException('Invalid password')
+      }
       return responesFromServer
   }
 

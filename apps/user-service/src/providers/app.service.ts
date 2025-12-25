@@ -6,6 +6,7 @@ import {type RegisterSchemaUser, type LoginScemaUser} from '@repo/user-interface
 import { UserSecurityEntity } from 'src/entities/user.security.entity';
 import { User_Entity_After_Proto_UserId, entityToProto, User_Entity_After_Proto_UserEmail, convertDateToTimeStamp, convertTimeStampToDate} from '@repo/proto';
 import { CacheService } from '@repo/chache-package';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class UserService {
@@ -68,9 +69,7 @@ export class UserService {
       relations: {user: true}
     })
 
-    console.log('there', currentSecurity);
-
-    if (!currentSecurity) throw new UnauthorizedException('There is not User with this email')
+    if (currentSecurity === null) throw new RpcException('There is not User with this email')
 
     const data = {
       ...currentSecurity.user,
@@ -83,8 +82,6 @@ export class UserService {
       updatedAt: data.createdAt.toISOString()
     }, 0)
 
-    console.log(data);
-    
     return {
       ...data, role: entityToProto(data.role),
       createdAt: convertDateToTimeStamp(data.createdAt),
@@ -109,7 +106,7 @@ export class UserService {
       where: {id: userId}
     })
 
-    if (!currenAuthUser) throw new UnauthorizedException('There is not User with this id')
+    if (!currenAuthUser) throw new RpcException('There is not User with this id')
 
     this.cacheService.set(`userId:${userId}`, {
       ...currenAuthUser, createdAt: currenAuthUser.createdAt.toISOString(),

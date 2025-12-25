@@ -9,6 +9,7 @@ import * as amqp from 'amqplib'
 import {ConnectionService} from '@repo/rabbitmq-package'
 import { ConfigService } from "@nestjs/config";
 import { CacheService } from "@repo/chache-package";
+import { RpcException } from "@nestjs/microservices";
 
 
 const ROUTING_KEY = {
@@ -94,7 +95,7 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
             }
         } catch (error) {
             if (error.code === '23505') {
-                throw new BadRequestException('there is soem comment with this data')
+                throw new RpcException('there is soem comment with this data')
             }
             throw error
         }
@@ -108,7 +109,7 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
         )
 
         if (response.affected === 0) {
-            throw new BadRequestException('no comment fount with this id for update')   
+            throw new RpcException('no comment fount with this id for update')   
         }
 
         const updated_data = await this.repositoryComment.findOneBy({
@@ -129,7 +130,7 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
             const response = await this.repositoryComment.delete({id: data.id, userId: data.userId})
 
             if (response.affected === 0) {
-                throw new BadRequestException('there was not comment with that id')
+                throw new RpcException('there was not comment with that id')
             }
 
             const posts = await this.cacheService.get<Post_Enitity_Proto[]>(this.postPageKeyRedis)

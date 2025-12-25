@@ -19,7 +19,9 @@ export class AppController {
       await this.authService.createNewUserViaRegistration(data)
       return new Empty()
     } catch (error) {
+      if (error instanceof RpcException) {
        throw new RpcException('Invalid Register Data')
+      } else throw new Error(error)
     }
   }
 
@@ -29,11 +31,10 @@ export class AppController {
   async loginUser(data: LoginScemaUser): Promise<Omit<User_after_auth_service_login, 'email' | 'passwordHash'>> {
     try {
       const response = await this.authService.loginUser(data)
-    
-      const access_token = await this.authService.getNewAccessToken(response)
-
-      const refresh_token = await this.authService.getNewRefreshToken(response)
-
+      const [access_token, refresh_token] = await Promise.all([
+        this.authService.getNewAccessToken(response),
+        this.authService.getNewRefreshToken(response)
+      ])
       const {email, passwordHash, ...otherData} = response
       console.log({...otherData, access_token, refresh_token});
     
@@ -43,7 +44,9 @@ export class AppController {
       refreshToken: refresh_token
     }
     } catch (error) {
-      throw new RpcException('invalid data: Invalid password || Invalid the user data')
+      if (error instanceof RpcException) {
+        throw new RpcException(error.getError())
+      } else throw new Error(error)
     }
     
   }
@@ -54,7 +57,9 @@ export class AppController {
     try {
         return await this.authService.recreationAccessToken(data.refreshToken)
     } catch (error) {
-      throw new RpcException('You dont have data || invalid creation token')
+      if (error instanceof RpcException) {
+        throw new RpcException(error.getError())
+      } else throw new Error(error)
     }
   }
 

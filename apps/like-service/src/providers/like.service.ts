@@ -8,6 +8,7 @@ import {CacheService} from '@repo/chache-package'
 import {ConnectionService} from '@repo/rabbitmq-package'
 import * as amqp from 'amqplib'
 import { ConfigService } from '@nestjs/config';
+import { RpcException } from '@nestjs/microservices';
 
 
 const KeyRouting = {
@@ -84,7 +85,7 @@ export class LikeService implements OnModuleInit, OnModuleDestroy{
     }
     } catch (error) {
         if (error.code === '23505') {
-          throw new BadRequestException('you already have like')
+          throw new RpcException('you already have like')
         }
         throw error
     }
@@ -96,7 +97,7 @@ export class LikeService implements OnModuleInit, OnModuleDestroy{
         const response = await this.reposotoryLike.delete({postId: data.postId, userId: data.userId})
 
         if (response.affected === 0) {
-          throw new BadRequestException('there is any like to delete')
+          throw new RpcException('there is any like to delete')
         }
 
         const firstPage = await this.cacheService.get<Post_Enitity_Proto[]>(this.postPageRedisKey)
@@ -146,7 +147,6 @@ export class LikeService implements OnModuleInit, OnModuleDestroy{
         likesGrouped.map(({postId, count}) => {
           cachedCount[Number(postId)] = Number(count)
           const cacheKey = `postId:${Number(postId)}:like:count`
-          console.log('hello');
           return this.cacheService.set(cacheKey, {like: Number(count)}, 0)
         }),
         missingPostIds.filter(postId => !foundIds.has(postId)).map(postId => {

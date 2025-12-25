@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable, OnModuleInit } from "@nestjs/common";
 import { type ClientGrpc } from "@nestjs/microservices";
 import {convertTimeStampToDate, DistLikeService, ReturnLikeCountData} from '@repo/proto'
 import {Like_Entity } from "@repo/user-interfaces";
@@ -17,16 +17,32 @@ export class LikeMainService implements OnModuleInit{
     }
 
     async creationNewLike(data: Omit<Like_Entity, 'createdAt' | 'id'>) : Promise<Empty> {
-        await firstValueFrom(this.distLikeService.createNewLike(data)) /// there we return whole LikeEntity
-        return new Empty()
+        try {
+            await firstValueFrom(this.distLikeService.createNewLike(data))
+            return new Empty()
+        } catch (error) {
+            throw new HttpException('Ivalid data', HttpStatus.NOT_ACCEPTABLE, {
+                cause: error
+            })
+        }
     }
 
     async deletingLikes(data: {postId: number, userId: number}): Promise<Empty> {
-        await firstValueFrom(this.distLikeService.deleteLike(data))
-        return new Empty()
+        try {
+            await firstValueFrom(this.distLikeService.deleteLike(data))
+            return new Empty()
+        } catch (error) {
+            throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
+                cause: error
+            })
+        }
     }
 
     async likeCountOfPost(postIds: number[], reqUser: number): Promise<ReturnLikeCountData> {
-        return await firstValueFrom(this.distLikeService.GetCountOfLike({postIds: postIds, reqUser: reqUser}))
+        return firstValueFrom(this.distLikeService.GetCountOfLike({postIds: postIds, reqUser: reqUser})).catch((error) => {
+            throw new HttpException('Ivalid data', HttpStatus.NOT_ACCEPTABLE, {
+                cause: error
+            })
+        })
     }
 }

@@ -16,10 +16,12 @@ export class AuthService implements OnModuleInit {
       this.distAuthPathService = this.client.getService<DistAuthPathInterface>('DistAuthPathService')
     }
 
-    async handleregisterUser(data: RegisterSchemaUser): Promise<void> {
-      console.log('we already go to first grpc');
-      
-      await firstValueFrom(this.distAuthPathService.registerUser(data))
+    async handleregisterUser(data: RegisterSchemaUser): Promise<void> {    
+      await firstValueFrom(this.distAuthPathService.registerUser(data)).catch((error) => {
+        throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
+          cause: error
+        })
+      })
     }
 
 
@@ -42,14 +44,18 @@ export class AuthService implements OnModuleInit {
           accessToken: accessToken
         }
       } catch (error) {
-        throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE)
+        throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
+          cause: error
+        })
       }
     }
 
 
     async handlerefreshToken(data: RefreshData): Promise<NewAccessToken> {
-      const response = await firstValueFrom(this.distAuthPathService.refreshToken(data))
-
-      return response
+      return firstValueFrom(this.distAuthPathService.refreshToken(data)).catch(error => {
+        throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
+          cause: error
+        })
+      })
     }
 }

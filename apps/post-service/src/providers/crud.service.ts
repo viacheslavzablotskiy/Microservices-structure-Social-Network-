@@ -9,6 +9,7 @@ import {ConnectionService} from '@repo/rabbitmq-package'
 import * as amqp from 'amqplib'
 import { ConfigService } from "@nestjs/config";
 import { CacheService } from "@repo/chache-package";
+import { RpcException } from "@nestjs/microservices";
 
 
 const ROUTING_KEY = {
@@ -107,7 +108,7 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
         } catch (error) {
             console.error(error);
             if (error.code === '203505') {
-                throw new BadRequestException('there already we have this post with that data')
+                throw new RpcException('there already we have this post with that data')
             }
             throw error
         }
@@ -123,7 +124,7 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
         })
 
         if (post === undefined || post.userId !== userId) {
-            throw new BadRequestException('you are not author or invalid data')
+            throw new RpcException('you are not author or invalid data')
         }
 
         const result = await this.repositoryPost.save(post)
@@ -139,7 +140,7 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
             })
 
             if (action.affected === 0) {
-                throw new BadRequestException('there is no any post with that id to delete')
+                throw new RpcException('there is no any post with that id to delete')
             }
             const cacheFirstPage = await this.cacheServie.get<Post_Enitity_Proto[]>(this.cacheKeyPostPage)
             const isInFirstPage = cacheFirstPage?.some((value) => {return value.id === data.id}) ?? false // value.id === data.id
