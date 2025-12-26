@@ -12,7 +12,8 @@ import { MainLikeController } from './controllers/like.controller';
 import { MainPostCOntriller } from './controllers/post.controller';
 import { MainPostService } from './providers/post.service';
 import { LikeMainService } from './providers/like.service';
-import { AuthLoggerMiddlware, AuthTokenAuthorization } from './distribute.middleware';
+import { AuthLoggerMiddlware, AuthTokenAuthorization } from './settings/distribute.middleware';
+import { TimersIntercertor } from './settings/main.interceptors';
 
 @Module({
   imports: [
@@ -71,7 +72,7 @@ import { AuthLoggerMiddlware, AuthTokenAuthorization } from './distribute.middle
     })
   ],
   controllers: [AuthController, MainCommentController, MainPostCOntriller, MainLikeController],
-  providers: [AuthService, MainCommentService, MainPostService, LikeMainService],
+  providers: [AuthService, MainCommentService, MainPostService, LikeMainService, TimersIntercertor],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

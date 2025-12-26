@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Res, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from '../providers/auth.service';
 import {RpcExceptionFilter, ZodValidationPipe} from '@repo/api';
 import {LoginScema, RegisterSchema, type RegisterSchemaUser, type LoginScemaUser, User_Login_Data} from '@repo/user-interfaces'
@@ -6,7 +6,8 @@ import { type Response } from 'express';
 import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoginDto, RegisterDto, LoginOutDto } from 'src/documentation_classes/auth.swagger';
 import {JWTAuthGuard} from '@repo/api'
-import { HttpEXceptionFilter } from 'src/custom.useFilter';
+import { HttpEXceptionFilter } from 'src/settings/custom.useFilter';
+import { TimersIntercertor } from 'src/settings/main.interceptors';
 
 @ApiTags('auth')
 @Controller()
@@ -16,13 +17,11 @@ export class AuthController {
   @Post('auth/register')
   @ApiOperation({summary: 'Registration peoples', description: 'create new user based on some datas'})
   @ApiBody({type: RegisterDto})
+  @UseInterceptors(TimersIntercertor)
   @ApiResponse({status: 201, description: 'User successuflly added'})
   async handleRegisterUser(
     @Body(new ZodValidationPipe(RegisterSchema)) dto: RegisterSchemaUser 
   ): Promise<void> {
-
-    console.log('we begin proccess');
-    
     await this.authService.handleregisterUser(dto)
   }
 

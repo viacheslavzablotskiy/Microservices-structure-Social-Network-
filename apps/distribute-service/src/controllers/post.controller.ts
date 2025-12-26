@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Query, Body, UseGuards, Patch, Delete, Param, Req, UnauthorizedException} from "@nestjs/common";
+import { Controller, Post, Get, Query, Body, UseGuards, Patch, Delete, Param, Req, UnauthorizedException, UseInterceptors} from "@nestjs/common";
 import {MainPostService} from '../providers/post.service'
 import { JWTAuthGuard, ZodValidationPipe } from "@repo/api";
 import {CreationPostDataSchema, type CreationPostDataType, UpdatetingPostDataSchema,
@@ -7,6 +7,7 @@ import {CreationPostDataSchema, type CreationPostDataType, UpdatetingPostDataSch
 import { ApiBody, ApiCreatedResponse, ApiNoContentResponse, ApiNotAcceptableResponse, ApiOkResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiBearerAuth, ApiCookieAuth } from "@nestjs/swagger";
 import { CretionNewPostSwagger, DeletePostSwagger, Post_Entity_Swagger, UpdationPostSwagger } from "src/documentation_classes/post.swagger";
 import { type Request } from "express";
+import { TimersIntercertor } from "src/settings/main.interceptors";
 
 @ApiTags('post')
 @Controller('post')
@@ -21,6 +22,7 @@ export class MainPostCOntriller {
     @ApiOperation({summary: 'get portion of the post', description: 'get some data after id key'})
     @ApiQuery({name: 'after', type: String, required: false, description: 'id last post'})
     @ApiOkResponse({type: Post_Entity_Swagger, isArray: true, description: 'you got this data'})
+    @UseInterceptors(TimersIntercertor)
     async getInitialOrSomeData(
         @Req() req: Request,
         @Query('after') after?: string

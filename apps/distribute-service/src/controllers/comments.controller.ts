@@ -1,4 +1,4 @@
-import { Controller, Query, Get, BadRequestException, Param, Body, Post, UseGuards, Delete, Patch, Req, UnauthorizedException } from "@nestjs/common";
+import { Controller, Query, Get, BadRequestException, Param, Body, Post, UseGuards, Delete, Patch, Req, UnauthorizedException, UseInterceptors } from "@nestjs/common";
 import {MainCommentService} from '../providers/comment.service'
 import { JWTAuthGuard, ZodValidationPipe } from "@repo/api";
 import {CreationCommentSchema, type CreationCommentType, UpdatingCommentSchema,
@@ -8,6 +8,7 @@ import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiNoContentResponse, ApiOperati
 import { CommentEntitySwagger, CreatioNcommentSwagger, DeleteCommentSwagger, UpdationCommentSwagger } from "src/documentation_classes/comments.swagger";
 import { UpdationPostSwagger } from "src/documentation_classes/post.swagger";
 import { type Request } from "express";
+import { TimersIntercertor } from "src/settings/main.interceptors";
 
 @ApiTags('comments')
 @Controller('comments')
@@ -18,10 +19,11 @@ export class MainCommentController {
     @ApiBearerAuth('auth-part')
     @ApiCookieAuth()
     @UseGuards(JWTAuthGuard)
-    @Get(':postId')
+    @Get(':postId') 
     @ApiOperation({summary: 'get comments', description: 'get protion of the comment'})
     @ApiQuery({name: 'after', type: String, required: false, description: 'what last id'})
     @ApiResponse({type: CommentEntitySwagger, isArray: true, description: 'your answer'})
+    @UseInterceptors(TimersIntercertor)
     async handleLoadMoreComments(
         @Query('after') after?: string,
         @Param('postId') postId?: string,
@@ -30,9 +32,9 @@ export class MainCommentController {
         if (!after) {
             return await this.commentService.getInitialCommentData({postId: Number(postId)})
         }
-        return await this.commentService.getOtherPartOfData({lastId: Number(after), postId: Number(postId)})    ///There on the client side
+        return await this.commentService.getOtherPartOfData({lastId: Number(after), postId: Number(postId)})    
     } 
-                                                                                                                ///dispatch nextCursor
+
     @ApiBearerAuth('auth-part')
     @ApiCookieAuth()
     @UseGuards(JWTAuthGuard)                                                                                                            

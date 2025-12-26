@@ -1,10 +1,11 @@
-import { Controller, Get, UseFilters } from '@nestjs/common';
+import { Controller, Get, UseFilters, UseInterceptors } from '@nestjs/common';
 import { PostService } from './providers/main.service';
 import { CrudService } from './providers/crud.service';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { Post_Enitity_Proto, type CretionNewPost } from '@repo/user-interfaces';
 import { ReturnPostsDto } from '@repo/proto';
 import {RpcExceptionFilter} from '@repo/api'
+import { CacheInterseptorPostPage } from './settings/main.interceptor';
 
 @Controller()
 export class AppController {
@@ -16,7 +17,8 @@ export class AppController {
 
 
   @GrpcMethod('DistPostService', 'GetInitialPosts')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(new RpcExceptionFilter)
+  @UseInterceptors(CacheInterseptorPostPage)
   async getIntialPosts(data: {}): Promise<ReturnPostsDto> {
     try {
       return await this.postService.getInitialState()
@@ -28,7 +30,7 @@ export class AppController {
   }
 
   @GrpcMethod('DistPostService', 'GetSomePartPosts')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(new RpcExceptionFilter)
   async getSomePartPosts(data: {lastId: number}): Promise<ReturnPostsDto> {
     try {
       return await this.postService.getSomePartOfPost(data.lastId)
@@ -40,7 +42,7 @@ export class AppController {
   }
 
   @GrpcMethod('DistPostService', 'CreateNewPost')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(new RpcExceptionFilter)
   async createNewPost(data: CretionNewPost): Promise<Post_Enitity_Proto> {
     try {
       return await this.crudService.handleNewPost(data)
@@ -52,7 +54,7 @@ export class AppController {
   }
 
   @GrpcMethod('DistPostService', 'UpdatePost')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(new RpcExceptionFilter)
   async updatePost(data: Partial<Omit<Post_Enitity_Proto, 'createdAt' | 'updatedAt' | 'id' | 'userId'>> 
     & Pick<Post_Enitity_Proto, 'id' | 'userId'>
   ) : Promise<Post_Enitity_Proto> {
@@ -66,7 +68,7 @@ export class AppController {
   }
 
   @GrpcMethod('DistPostService', 'DeletePost')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(new RpcExceptionFilter)
   async deletePost(data: {id: number, userId: number}): Promise<{}> {
     try {
       return await this.crudService.deletePost(data)

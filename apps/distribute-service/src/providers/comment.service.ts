@@ -23,6 +23,9 @@ export class MainCommentService implements OnModuleInit{
         try {
              const response = await firstValueFrom(this.distCommentService.getInitialCommentData(data))
 
+             console.log(data);
+             
+
             if (!response.comments) return []
 
             const {comments} = response

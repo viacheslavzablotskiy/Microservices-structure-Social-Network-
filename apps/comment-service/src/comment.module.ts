@@ -8,6 +8,8 @@ import { CommentEnity } from './entitis/comment.entity';
 import {CachePackageMdoule} from "@repo/chache-package"
 import EventCommentService from './providers/eventPatter.comment';
 import {ConnectionModule} from '@repo/rabbitmq-package'
+import { RpcExceptionFilter } from '@repo/api';
+import { CacheInterceptorPage } from './settings/main.interceptors';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -41,6 +43,7 @@ import {ConnectionModule} from '@repo/rabbitmq-package'
     })
   ],
   controllers: [CommentController],
-  providers: [CommentService, CrudCommentService, EventCommentService],
+  providers: [CommentService, CrudCommentService, EventCommentService,
+     RpcExceptionFilter, CacheInterceptorPage],
 })
 export class AppModule {}

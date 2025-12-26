@@ -20,30 +20,13 @@ export class CommentService {
     async getInitialCommentData(data: {postId: number}): Promise<ReturnCommentData> {
       const cacheKey = `comments:post:${data.postId}:page:1`
 
-      const cached: CommentEnity_Proto[] | undefined = await this.cacheService.get(cacheKey)
-
-      console.log(cached);
-      
-
-      if (cached) {
-        const response = cached.length === 0 ? [] : cached
-        return {comments: response}
-      }
-
       const initialData = await this.repositoryComment.find({
         where: {postId: data.postId},
         take: 20,
         order: {id: 'DESC'}
       })
-      
       const response = initialData.length === 0 ? [] : initialData.map((comment) => convertCommentToProtoComment(comment))
-      console.log(response);
-
       await this.cacheService.set(cacheKey, response, 0)
-
-      console.log(await this.cacheService.get(cacheKey));
-      
-      
       return {comments: response}
     }
 

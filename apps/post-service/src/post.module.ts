@@ -7,6 +7,8 @@ import {TypeOrmModule} from '@nestjs/typeorm'
 import { PostEntity } from './entities/post.entity';
 import { CachePackageMdoule } from '@repo/chache-package'
 import {ConnectionModule} from '@repo/rabbitmq-package'
+import { CacheInterseptorPostPage } from './settings/main.interceptor';
+import { RpcExceptionFilter } from '@repo/api';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -40,6 +42,6 @@ import {ConnectionModule} from '@repo/rabbitmq-package'
     })
   ],
   controllers: [AppController],
-  providers: [PostService, CrudService],
+  providers: [PostService, CrudService, CacheInterseptorPostPage, RpcExceptionFilter],
 })
 export class AppModule {}

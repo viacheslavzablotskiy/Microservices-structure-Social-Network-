@@ -17,11 +17,7 @@ export class PostService {
  
   async getInitialState(): Promise<ReturnPostsDto> {
     const cacheKey = `post:page:1`
-    const cached: Post_Enitity_Proto[] | undefined = await this.cacheService.get(cacheKey)
 
-    if (cached) {
-      return {posts: cached}
-    }
     const inital_part_posts = await this.repositoryPost.find({
       order: {id: 'DESC'},
       take: 20

@@ -1,4 +1,4 @@
-import { Controller, Get, UseFilters } from '@nestjs/common';
+import { Controller, Get, UseFilters, UseInterceptors } from '@nestjs/common';
 import { CommentService } from '../providers/comment.service';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { CommentEnity_Proto } from '@repo/user-interfaces';
@@ -6,6 +6,7 @@ import { CrudCommentService } from '../providers/crud.comment.service';
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
 import { CommentReturnCount, ReturnCommentData } from '@repo/proto';
 import {RpcExceptionFilter} from '@repo/api'
+import { CacheInterceptorPage } from 'src/settings/main.interceptors';
 
 @Controller()
 export class CommentController {
@@ -16,7 +17,8 @@ export class CommentController {
 
     
   @GrpcMethod('DistCommentService', 'GetInitialCommentData')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(RpcExceptionFilter)
+  @UseInterceptors(CacheInterceptorPage)
   async getInitialCommentData(data: {postId: number}): Promise<ReturnCommentData> {
     try {
       return await this.commentService.getInitialCommentData(data)
@@ -28,7 +30,7 @@ export class CommentController {
   }
 
   @GrpcMethod('DistCommentService', 'GetOtherCommentData')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(RpcExceptionFilter)
   async getOtherCommentData(data: {postId: number, lastId: number}): Promise<ReturnCommentData> {
     try {
       return await this.commentService.getOtherPartComment(data)
@@ -40,7 +42,7 @@ export class CommentController {
   }
 
   @GrpcMethod('DistCommentService', 'CreateNewComment')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(RpcExceptionFilter)
   async createNewComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'id'>) : Promise<CommentEnity_Proto> {
     try {
       return await this.crudCommentService.createNewComment(data)
@@ -52,7 +54,7 @@ export class CommentController {
   }
 
   @GrpcMethod('DistCommentService', 'UpdateComment')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(RpcExceptionFilter)
   async updateComment(data: Omit<CommentEnity_Proto, 'createdAt' | 'updatedAt' | 'postId'>): Promise<CommentEnity_Proto> {
     try {
       return await this.crudCommentService.updateComment(data)
@@ -64,7 +66,7 @@ export class CommentController {
   }
 
   @GrpcMethod('DistCommentService', 'DeleteComment')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(RpcExceptionFilter)
   async deleteComment(data: {id: number, userId: number, postId: number}) : Promise<Empty> {
     try {
       console.log(data);
@@ -77,7 +79,7 @@ export class CommentController {
   }
 
   @GrpcMethod('DistCommentService', 'GetCountofLike')
-  @UseFilters(new RpcExceptionFilter())
+  @UseFilters(RpcExceptionFilter)
   async getCountofLike(data: {postIds: number[]}) : Promise<CommentReturnCount> {  
     try {
       return await this.commentService.getCountofComment(data.postIds)
