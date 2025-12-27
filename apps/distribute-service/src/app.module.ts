@@ -14,6 +14,7 @@ import { MainPostService } from './providers/post.service';
 import { LikeMainService } from './providers/like.service';
 import { AuthLoggerMiddlware, AuthTokenAuthorization } from './settings/distribute.middleware';
 import { TimersIntercertor } from './settings/main.interceptors';
+import { ImageController } from './controllers/image-loading.controller';
 
 @Module({
   imports: [
@@ -71,7 +72,7 @@ import { TimersIntercertor } from './settings/main.interceptors';
       })
     })
   ],
-  controllers: [AuthController, MainCommentController, MainPostCOntriller, MainLikeController],
+  controllers: [AuthController, MainCommentController, MainPostCOntriller, MainLikeController, ImageController],
   providers: [AuthService, MainCommentService, MainPostService, LikeMainService, TimersIntercertor],
 })
 export class AppModule implements NestModule {
