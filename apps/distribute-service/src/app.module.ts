@@ -15,6 +15,8 @@ import { LikeMainService } from './providers/like.service';
 import { AuthLoggerMiddlware, AuthTokenAuthorization } from './settings/distribute.middleware';
 import { TimersIntercertor } from './settings/main.interceptors';
 import { ImageController } from './controllers/image-loading.controller';
+import { ImageLoader } from './providers/image.provider';
+import { CachePackageMdoule } from '@repo/chache-package';
 
 @Module({
   imports: [
@@ -70,10 +72,14 @@ import { ImageController } from './controllers/image-loading.controller';
       useFactory: (config: ConfigService) => ({
         refrechTokenSecret: config.get<string>('JWT_REFRESH_SECRET') || ''
       })
+    }),
+    CachePackageMdoule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({REDIS_URL: config.get<string>('REDIS_URL_PATH') || ''})
     })
   ],
   controllers: [AuthController, MainCommentController, MainPostCOntriller, MainLikeController, ImageController],
-  providers: [AuthService, MainCommentService, MainPostService, LikeMainService, TimersIntercertor],
+  providers: [AuthService, MainCommentService, MainPostService, LikeMainService, TimersIntercertor, ImageLoader],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
