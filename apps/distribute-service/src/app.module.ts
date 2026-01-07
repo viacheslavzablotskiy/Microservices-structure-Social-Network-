@@ -17,6 +17,7 @@ import { TimersIntercertor } from './settings/main.interceptors';
 import { ImageController } from './controllers/image-loading.controller';
 import { ImageLoader } from './providers/image.provider';
 import { CachePackageMdoule } from '@repo/chache-package';
+import {MongooseModule, MongooseModuleOptions, } from "@nestjs/mongoose"
 
 @Module({
   imports: [
