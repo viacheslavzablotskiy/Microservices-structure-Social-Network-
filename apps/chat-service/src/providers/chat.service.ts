@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { InjectConnection } from '@nestjs/mongoose';
+import mongoose, { Connection } from 'mongoose';
 
 @Injectable()
-export class AppService {
-  getHello(): string {
-    return 'Hello World!';
-  }
+export class AppService{
+
+  constructor(@InjectConnection() private connection: Connection) {}
 }

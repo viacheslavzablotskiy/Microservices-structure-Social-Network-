@@ -1,25 +1,20 @@
-// function hello(data) {
-//     var s = data
 
-//     setTimeout(() => {console.log(s);
-//     }, 1000)
 
-//     s = 20
+class Data {
+    #hello;
+    constructor(hello) {
+        this.#hello = hello
+    }
 
-//     setTimeout(() => {
-//         console.log(s);
-//     })
-// }
-
-// hello('g')
-
-async function l() {
-    const data = new Promise((resolve) => {
-        resolve(10)
-    }).then(json => console.log(json)
-    )
-    return data
+    async helloMethod(data = '') {
+        return data + this.#hello
+    }
 }
 
-console.log(l());
+
+const intstance = new Data('hello')
+const data = await new  Promise((resolve) => {resolve(intstance.helloMethod('hello'))}).catch((error) => console.error(error))
+console.log(data);
+
+
 

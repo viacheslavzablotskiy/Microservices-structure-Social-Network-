@@ -4,11 +4,11 @@ dotenv.config()
 const config = {
   mongodb: {
     // TODO Change (or review) the url to your MongoDB:
-    url: `mongodb://${process.env.MONGO_USER || ''}:${process.env.MONGO_PASS || ''}@localhost:27017`,
+    url: `mongodb://${process.env.MONGO_USER || ''}:${process.env.MONGO_PASS || ''}@${process.env.REPLICA_SETS_HOSTS || ''}
+    /${process.env.MONGO_DB || 'chat_db'}?replicaSet=${process.env.REPLICA_SETS_NAME || 'myReplicaSet'}`,
     // TODO Change this to your database name:
-    databaseName: process.env.MONGO_DB || 'chat_db',
     options: {
-      authSource: process.env.MONGO_AUTH_SOURCE || 'admin'
+      authSource: process.env.MONGO_AUTH_SOURCE || 'admin',
       // useNewUrlParser: true, // (not needed anymore in mongodb driver 4.x+)
       // useUnifiedTopology: true, // (not needed anymore in mongodb driver 4.x+)
       //   connectTimeoutMS: 3600000, // increase connection timeout to 1 hour
