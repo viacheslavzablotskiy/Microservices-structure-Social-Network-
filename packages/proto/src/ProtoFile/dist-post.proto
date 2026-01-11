@@ -5,51 +5,58 @@ package distpost;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto"; 
 
+// Method that make changes in post-service
 service DistPostService {
+    // method that return the first pair of the posts
     rpc GetInitialPosts (google.protobuf.Empty) returns (InitialPosts);
+    // method that return another 20 start from the n
     rpc GetSomePartPosts (MoreThanId) returns (InitialPosts);
+    // method that created new post
     rpc CreateNewPost (CreateNewPostData) returns (PostProto);
+    // method that updated already created post
     rpc UpdatePost (UpdatePostData) returns (PostProto);
+    // method that delete already created post
     rpc DeletePost (DeletePostData) returns (google.protobuf.Empty);
 }
 
-
+// Post Entity
 message PostProto {
     int32 id = 1;
-    int32 userId = 2;
+    int32 user_id = 2;
     string title = 3;
-    string imageUrl = 4;
+    string image_url = 4;
     string content = 5;
-    google.protobuf.Timestamp createdAt = 8;
-    google.protobuf.Timestamp updatedAt = 9;
+    google.protobuf.Timestamp created_at = 8;
+    google.protobuf.Timestamp updated_at = 9;
 }
-
+// midst of the data
 message InitialPosts {
     repeated PostProto posts = 1;
 }
-
+// lastId
 message MoreThanId {
-    int32 lastId = 1;
+    int32 last_id = 1;
 }
-
+// data fro enw post 
 message CreateNewPostData {
-    int32 userId = 1;
+    int32 user_id = 1;
     string title = 2;
     string content = 3;
-    string imageUrl = 4;
+    string image_url = 4;
 }
 
-
+// data for update post 
 message UpdatePostData {
     int32 id = 1;
-    int32 userId = 2;
+    int32 user_id = 2;
     optional string title = 3;
-    optional string imageUrl = 4;
+    optional string image_url = 4;
     optional string content = 5;
 }
 
+// data for delete post
 message DeletePostData {
     int32 id = 1;
-    int32 userId = 2;
+    int32 user_id = 2;
 }
 

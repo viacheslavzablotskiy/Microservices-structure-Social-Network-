@@ -5,59 +5,64 @@ package auth;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-
+// service for the authorization
 service AuthServiceProto {
+    // method for registration
     rpc RegisterUser(AuthRegiserData) returns (google.protobuf.Empty) {}
+    // method for get user by email
     rpc GetUserByEmail(GetUserByEmailData) returns (UserEmalEntity) {}
+    // method for getting the user by id
     rpc GetUserById(GetUserByIdData) returns (UserIdEnitity) {}
 
 }
 
-
+// data for resgister 
 message AuthRegiserData  {
     string login = 1;
     string email = 2;
     string password = 3;
 }
 
+// email
 message GetUserByEmailData  {
     string email = 1;
 }
-
+// id
 message GetUserByIdData {
     int32 id = 1;
 }
 
+//enum for the real enum
 enum UserRolePtroto {
   USER_ROLE_UNSPECIFIED = 0;
   ADMIN = 1;
   USER = 2;
   GHOST = 3;
 }
-
+// data for the method by email
 message UserEmalEntity{
     int32 id = 1;
-    bool isActivate = 2;
-    bool isVerified = 3;
-    string avatarUrl = 4;
-    string coverUrl = 5;
+    bool is_activate = 2;
+    bool is_verified = 3;
+    string avatar_url = 4;
+    string cover_url = 5;
     string login = 6;
     UserRolePtroto role = 7;
-    google.protobuf.Timestamp createdAt = 8;
-    google.protobuf.Timestamp updatedAt = 9;
+    google.protobuf.Timestamp created_at = 8;
+    google.protobuf.Timestamp updated_at = 9;
     string email = 10;
-    string passwordHash = 11;
+    string password_hash = 11;
 }
-
+// user for method by id
 message UserIdEnitity {
     int32 id = 1;
-    bool isActivate = 2;
-    bool isVerified = 3;
-    string avatarUrl = 4;
-    string coverUrl = 5;
+    bool is_activate = 2;
+    bool is_verified = 3;
+    string avatar_url = 4;
+    string cover_url = 5;
     string login = 6;
     UserRolePtroto role = 7;
-    google.protobuf.Timestamp createdAt = 8;
-    google.protobuf.Timestamp updatedAt = 9;
+    google.protobuf.Timestamp created_at = 8;
+    google.protobuf.Timestamp updated_at = 9;
 }
 

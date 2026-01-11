@@ -4,6 +4,7 @@ export * from './intefaceProto/distribute-auth-interafces'
 export * from './intefaceProto/dist-like-interface'
 export * from './intefaceProto/dist-comment-interface'
 export * from './intefaceProto/dist-post-service'
+export * from './intefaceProto/websocket-chat-interface'
 
 /// alll utitits for converting from .proto
 export * from './utilits/changeEnums'

@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package websocketchat;
+
+import "google/protobuf/empty.proto";
+
+//Service for sending Messages to the chat-service
+service  WebscoketChatService{
+    // method that send data to chat-service
+    rpc SendMessageChat(SendMessageChat) returns (google.protobuf.Empty);
+    // method that update message in the conversation
+    rpc UpdateMessageChat(UpdateChatMessage) returns (google.protobuf.Empty);
+    // method that delete message in the conversation
+    rpc DeleteMessageChat(DeleteChatMessage) returns (google.protobuf.Empty);
+}
+
+//Send data to the chat 1:1
+message SendMessageChat {
+    int32 sender_id = 1;
+    int32 opponent_id = 2;
+    string message = 3;
+}
+
+// update already created message in the converation
+message UpdateChatMessage {
+    string message_id = 1;
+    int32 sender_id = 2;
+    int32 opponent_id = 3;
+    string message = 4;
+}
+
+// delete already created message in the conversation
+message DeleteChatMessage {
+    string message_id = 1;
+    int32 sender_id = 2;
+    int32 opponent_id = 3;
+}

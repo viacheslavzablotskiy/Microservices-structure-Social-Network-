@@ -25,7 +25,8 @@
     "./dist-auth.proto": "./src/ProtoFile/dist-auth.proto",
     "./dist-post.proto": "./src/ProtoFile/dist-post.proto",
     "./dist-like.proto": "./src/ProtoFile/dist-like.proto",
-    "./dist-comment.proto" : "./src/ProtoFile/dist-comment.proto"
+    "./dist-comment.proto" : "./src/ProtoFile/dist-comment.proto",
+    "./websocket-chat.proto": "./src/ProtoFile/websocket-chat.proto"
   },
   "dependencies": {
     "@nestjs/mapped-types": "*",

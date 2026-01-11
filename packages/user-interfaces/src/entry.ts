@@ -9,3 +9,6 @@ export * from './main-user-interfaces/zod-zchemas/login-schemas'
 export * from './zod-schemas/like-schemas/likeSchema'
 export * from './zod-schemas/comment-schemas/commentSchemas'
 export * from './zod-schemas/post-schemas/postShemas'
+
+export * from './main_chat_interfaces/main_message_interfaces'
+export * from './main_chat_interfaces/main_room_interfaces'

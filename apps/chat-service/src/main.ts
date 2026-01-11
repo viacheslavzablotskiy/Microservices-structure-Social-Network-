@@ -11,13 +11,20 @@ async function bootstrap() {
   const port = config.get<number>('PORT', 3000)
 
   app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.REDIS,
+    transport: Transport.GRPC,
     options: {
-      host: config.get<string>('REDIS_HOST', 'localhost'),
-      port: config.get<number>('REDIS_PORT', 6379),
-      retryAttempts: 3,
-      retryDelay: 3000,
-      wildcards: true
+      package: 'websocketchat',
+      protoPath: '@repo/proto/websocket-chat.proto',
+      url: '0.0.0.0:5010'
+    }
+  })
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: '',
+      protoPath: '',
+      url: ''
     }
   })
 

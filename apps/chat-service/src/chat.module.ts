@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './controllers/chat.controller';
-import { AppService } from './providers/chat.service';
+import { ChatController } from './controllers/chat.controller';
+import { ChatService } from './providers/chat.service';
 import {ConfigModule, ConfigService} from '@nestjs/config'
 import {MongooseModule} from '@nestjs/mongoose'
 import { Room, RoomSchema } from './enities/room.entity';
 import { Message, MessageSchema } from './enities/message.entity';
+import { createClient } from 'redis';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -23,7 +24,18 @@ import { Message, MessageSchema } from './enities/message.entity';
       })
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [ChatController],
+  providers: [ChatService, 
+    {
+      provide: 'REDIS_PUBLISH_INSTANCE',
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => {
+        const client = createClient({url: config.get<string>('REDIS_URL_PATH', '')})
+        client.on('error', (error) => {console.error(error)})
+        await client.connect()
+        return client
+      }
+    }
+  ],
 })
 export class AppModule {}
