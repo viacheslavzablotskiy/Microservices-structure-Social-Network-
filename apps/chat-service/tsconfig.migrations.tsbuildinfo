@@ -1,1 +1,1 @@
-{"root":["./migrations/ts/448-create-room-message.ts"],"version":"5.9.3"}
+{"root":["./migrations/main/migrations/350-add-message-authorId-fields.ts","./migrations/main/migrations/448-create-room-message.ts","./migrations/main/migrations/712-add-roomId-field-room.ts","./migrations/main/schemas/commonSchemas.ts"],"version":"5.9.3"}

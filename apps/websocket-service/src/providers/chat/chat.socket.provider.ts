@@ -2,10 +2,11 @@ import { ConnectedSocket, GatewayMetadata, MessageBody, OnGatewayConnection, OnG
 import {type Server, type Socket} from 'socket.io'
 import {AuthCreationToken} from '@repo/api'
 import { ChatGPRCService } from "./chat.grpc.provider";
-import { Inject } from "@nestjs/common";
+import { Inject, UseGuards } from "@nestjs/common";
 import { type RedisClientType } from "redis";
 import {RedisPublishData} from '@repo/user-interfaces'
 import {type DataToUpdateMessageChat, type DataToDeleteMessageChat, type SendMessageChatData} from '@repo/proto'
+import { WebSocketGuard } from "src/settings/websocket-guard";
 
 const options: GatewayMetadata = {
     namespace: 'chats',
@@ -61,40 +62,32 @@ export class ChatSocketService implements OnGatewayInit, OnGatewayConnection, On
         }
     }
 
-    async verifying(client: Socket) {
-        if (!client.data.user.id) {
-            client.disconnect()
-            throw new WsException('you are not authorizate')
-        }
-    }
-
     async algorithmName(data: {senderId: number, opponentid: number}): Promise<string> {
         return [data.senderId, data.opponentid].sort().join(':')
     }
 
+    @UseGuards(WebSocketGuard)
     @SubscribeMessage('joinChat')
     async joinToChat(@MessageBody() opponentId: number, @ConnectedSocket() client: Socket): Promise<void> {
-        await this.verifying(client)
         const uniqueName = await this.algorithmName({senderId: client.data.user.id, opponentid: opponentId})
         client.join(uniqueName)
     }
 
+    @UseGuards(WebSocketGuard)
     @SubscribeMessage('sendMessageChat')
     async sendMessageToChat(@MessageBody() data: Omit<SendMessageChatData, 'senderId'>, @ConnectedSocket() client: Socket): Promise<void> {
-        await this.verifying(client)
         await this.chatGPRCService.sendMessageToChat({opponentId: data.opponentId, message: data.message, senderId: client.data.user.id})
     }
 
-
+    @UseGuards(WebSocketGuard)
     @SubscribeMessage('updateMessageChat')
     async updateMessageChat(@MessageBody() data: Omit<DataToUpdateMessageChat, 'senderId'>, @ConnectedSocket() client: Socket): Promise<void> {
-        await this.verifying(client)
         await this.chatGPRCService.updateMessageInChat({messageId: data.messageId, senderId: client.data.user.id, message: data.message, opponentId: data.opponentId})
     }
 
+    @UseGuards(WebSocketGuard)
     @SubscribeMessage('deleteMessageChat')
     async deleteMessageChat(@MessageBody() data: Omit<DataToDeleteMessageChat, 'senderId'>, @ConnectedSocket() client: Socket): Promise<void> {
-        await this.verifying(client)
         await this.chatGPRCService.deleteMessageInChat({messageId: data.messageId, senderId: client.data.user.id, opponentId: data.opponentId})
     }
 

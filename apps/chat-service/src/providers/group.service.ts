@@ -27,22 +27,22 @@ export class GroupService {
         return newGroup.save()
     }
 
-    async addNewMemberToGroup(data: {userId: number, roomName: string}): Promise<void> {
-        await this.roomModel.updateOne(
-            {name: data.roomName},
+    async addNewMemberToGroup(data: {userId: number, roomKey: string, authorId: number}): Promise<void> {
+        const dat =  await this.roomModel.updateOne(
+            {name: data.roomKey, authorId: data.authorId},
             {$addToSet: {participiants: data.userId}}
         ).exec()
     }
 
-    async deleteMemberFromGroup(data: {userId: number, roomid: string}) {
-        await this.roomModel.updateOne({name: data.roomid}, {
+    async deleteMemberFromGroup(data: {userId: number, roomKey: string, authorId: number}) {
+        await this.roomModel.updateOne({name: data.roomKey}, {
             $pull: {participiants: data.userId}
         })
     }
 
 
     async newMessageInGroup(data: {roomName: string, senderId: number, message: string}): Promise<MessageType> {
-        const currentRoom = await this.roomModel.find({name: data.roomName}).exec()
+        const currentRoom = await this.roomModel.find({name: data.roomName})
 
         if (!currentRoom) {
             throw new RpcException('there is no any room with this name')
@@ -55,4 +55,11 @@ export class GroupService {
             isEdited: false
         })
     }
+    
+
+    async updateMessageInGroup(data: {senderId: number, message: string, messageId: string}) {
+
+    }
+
+    async deleteMessageInGroup(data: {senderId: number, messageId: string}) {}
 }

@@ -3,23 +3,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.messageSchema = exports.roomSchema = void 0;
 exports.up = up;
 exports.down = down;
-const stringField = (options = {}) => ({ ...options, bsonType: 'string' });
-const intField = (options = {}) => ({ ...options, bsonType: 'int' });
-const boolField = (options = {}) => ({ ...options, bsonType: 'bool' });
-const dateField = (options = {}) => ({ ...options, bsonType: 'date' });
+const commonSchemas_1 = require("../schemas/commonSchemas");
 exports.roomSchema = {
     bsonType: 'object',
     required: ['name', 'participiants', 'createdAt', 'updatedAt', 'isGroup'],
     additionalProperties: false,
     properties: {
-        name: stringField(),
+        name: (0, commonSchemas_1.stringField)(),
         participiants: {
             bsonType: 'array',
-            items: intField()
+            items: (0, commonSchemas_1.intField)()
         },
-        isGroup: boolField(),
-        createdAt: dateField(),
-        updatedAt: dateField()
+        isGroup: (0, commonSchemas_1.boolField)(),
+        createdAt: (0, commonSchemas_1.dateField)(),
+        updatedAt: (0, commonSchemas_1.dateField)()
     }
 };
 exports.messageSchema = {
@@ -28,12 +25,12 @@ exports.messageSchema = {
     additionalProperties: false,
     properties: {
         roomId: { bsonType: 'objectId', description: 'Reference to Room' },
-        senderId: intField(),
-        attachments: { bsonType: 'array', items: stringField() },
-        isEdited: boolField(),
-        isDeleted: boolField(),
-        createdAt: dateField(),
-        updatedAt: dateField()
+        senderId: (0, commonSchemas_1.intField)(),
+        attachments: { bsonType: 'array', items: (0, commonSchemas_1.stringField)() },
+        isEdited: (0, commonSchemas_1.boolField)(),
+        isDeleted: (0, commonSchemas_1.boolField)(),
+        createdAt: (0, commonSchemas_1.dateField)(),
+        updatedAt: (0, commonSchemas_1.dateField)()
     }
 };
 async function up(db) {

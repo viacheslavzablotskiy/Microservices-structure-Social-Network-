@@ -2,10 +2,10 @@
     "compilerOptions": {
         "target": "es2019",
         "module": "commonjs",
-        "rootDir": "migrations/ts",
-        "outDir": "migrations/js",
+        "rootDir": "migrations/main",
+        "outDir": "migrations/dist_migraitons",
         "esModuleInterop": true,
         "strict": true
     },
-    "include": ["migrations/ts"]
+    "include": ["migrations/main"]
 }

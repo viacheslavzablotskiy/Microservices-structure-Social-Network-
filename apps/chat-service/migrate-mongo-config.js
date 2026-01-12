@@ -4,8 +4,7 @@ dotenv.config()
 const config = {
   mongodb: {
     // TODO Change (or review) the url to your MongoDB:
-    url: `mongodb://${process.env.MONGO_USER || ''}:${process.env.MONGO_PASS || ''}@${process.env.REPLICA_SETS_HOSTS || ''}
-    /${process.env.MONGO_DB || 'chat_db'}?replicaSet=${process.env.REPLICA_SETS_NAME || 'myReplicaSet'}`,
+    url: `mongodb://${process.env.MONGO_USER || ''}:${process.env.MONGO_PASS || ''}@${process.env.REPLICA_SETS_HOSTS || ''}/${process.env.MONGO_DB || 'chat_db'}?replicaSet=${process.env.REPLICA_SETS_NAME || 'myReplicaSet'}`,
     // TODO Change this to your database name:
     options: {
       authSource: process.env.MONGO_AUTH_SOURCE || 'admin',
@@ -17,7 +16,7 @@ const config = {
   },
 
   // The migrations dir, can be an relative or absolute path. Only edit this when really necessary.
-  migrationsDir: "migrations/js",
+  migrationsDir: "migrations/dist_migraitons/migrations",
 
   // The mongodb collection where the applied changes are stored. Only edit this when really necessary.
   changelogCollectionName: "changelog",

@@ -1,29 +1,17 @@
 import { Module } from '@nestjs/common';
-import { ScoketService } from './providers/socket.service';
+import { GroupSerivce } from './providers/group/group.socket.service';
 import {ConfigModule, ConfigService} from '@nestjs/config'
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { JwtModule } from '@nestjs/jwt';
 import {StringValue} from 'ms'
 import {AuthStragetyModule} from '@repo/api'
 import {createClient} from 'redis'
+import { ChatGPRCService } from './providers/chat/chat.grpc.provider';
+import { ChatSocketService } from './providers/chat/chat.socket.provider';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
-    ClientsModule.registerAsync([
-    {
-      name: 'REDIS_INSTANCE',
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (config: ConfigService) => ({
-        transport: Transport.REDIS,
-        options: {
-          host: config.get<string>('REDIS_HOST') ?? 'localhost',
-          port: config.get<number>('REDIS_PORT') ?? 6379
-        },
-      }),
-    },
-    ]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
@@ -57,7 +45,7 @@ import {createClient} from 'redis'
     ])
   ],
   controllers: [],
-  providers: [ScoketService,
+  providers: [GroupSerivce, ChatGPRCService, ChatSocketService,
     {
       provide: 'REDIS_CLIENT_INSTANCE',
       inject: [ConfigService],

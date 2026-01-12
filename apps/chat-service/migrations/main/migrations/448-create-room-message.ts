@@ -1,20 +1,5 @@
 import {Db} from 'mongodb'
-
-
-interface JsonSchema {
-    bsonType: string | string[],
-    description?: string,
-    required?: string[],
-    properties?: Record<string, JsonSchema>,
-    items?: JsonSchema,
-    enum?: any[],
-    additionalProperties?: boolean 
-}
-
-const stringField = (options: Partial<JsonSchema> = {}): JsonSchema => ({...options, bsonType: 'string'})
-const intField = (options: Partial<JsonSchema> = {}): JsonSchema => ({...options, bsonType: 'int'})
-const boolField = (options: Partial<JsonSchema> = {}): JsonSchema => ({...options, bsonType: 'bool'})
-const dateField = (options: Partial<JsonSchema> = {}): JsonSchema => ({...options, bsonType: 'date'})
+import {JsonSchema, stringField, dateField, boolField, intField} from '../schemas/commonSchemas' 
 
 export const roomSchema: JsonSchema = {
     bsonType: 'object',

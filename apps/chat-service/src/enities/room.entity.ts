@@ -6,8 +6,14 @@ export class Room {
     @Prop({required: true})
     name: string
 
+    @Prop({type: String, required: true})
+    roomId: string
+
     @Prop({type: [Number], required: true})
     participiants: number[]
+
+    @Prop({type: Number, required: true})
+    authorId: number
 
     @Prop({default: false})
     isGroup: boolean

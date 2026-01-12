@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.dateField = exports.boolField = exports.intField = exports.stringField = void 0;
+const stringField = (options = {}) => ({ ...options, bsonType: 'string' });
+exports.stringField = stringField;
+const intField = (options = {}) => ({ ...options, bsonType: 'int' });
+exports.intField = intField;
+const boolField = (options = {}) => ({ ...options, bsonType: 'bool' });
+exports.boolField = boolField;
+const dateField = (options = {}) => ({ ...options, bsonType: 'date' });
+exports.dateField = dateField;

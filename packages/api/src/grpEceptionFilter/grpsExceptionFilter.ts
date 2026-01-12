@@ -1,10 +1,11 @@
-import { ArgumentsHost, Catch, ExceptionFilter } from "@nestjs/common";
+import { ArgumentsHost, Catch, ExceptionFilter, Injectable } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
 import {Observable, throwError} from 'rxjs'
 import {status} from '@grpc/grpc-js'
 
 
 @Catch(RpcException)
+@Injectable()
 export class RpcExceptionFilter implements ExceptionFilter {
     catch(exception: RpcException, host: ArgumentsHost): Observable<any> {
         const ctx = host.switchToRpc()
