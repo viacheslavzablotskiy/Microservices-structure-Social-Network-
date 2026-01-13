@@ -1,9 +1,11 @@
-import { Inject, Injectable, UseGuards } from '@nestjs/common';
+import { Inject, Injectable, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ConnectedSocket, GatewayMetadata, MessageBody, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException} from '@nestjs/websockets';
 import {type Server, type Socket} from 'socket.io'
 import {AuthCreationToken} from '@repo/api'
 import {type RedisClientType} from 'redis'
 import { WebSocketGuard } from 'src/settings/websocket-guard';
+import { GroupGRPSService } from './group.grpc.provider';
+import { WsExceptionFilter } from 'src/settings/websocket-exception';
 
 
 const options: GatewayMetadata = {
@@ -28,11 +30,11 @@ export class GroupSerivce implements OnGatewayConnection, OnGatewayInit, OnGatew
         await sub.connect()
 
         await sub.pSubscribe(['group:member:*', 'group:message:*'], (message: string, channel: string) => {
-            switch (channel) {
-              case '': {
-
+            switch (true) {
+              case channel.startsWith('group:member:'): {
+                break
               }
-              case '': {
+              case channel.startsWith('group:message:'): {
 
               }
             }
@@ -56,7 +58,7 @@ export class GroupSerivce implements OnGatewayConnection, OnGatewayInit, OnGatew
     }
 
     constructor (
-      private readonly groupGrpsService: GroupSerivce,
+      private readonly groupGrpsService: GroupGRPSService,
       private readonly authSerivce: AuthCreationToken,
       @Inject('REDIS_CLIENT_INSTANCE') private readonly redisInstance: RedisClientType
     ) {}
@@ -80,12 +82,49 @@ export class GroupSerivce implements OnGatewayConnection, OnGatewayInit, OnGatew
     //---------------------------------------------------------------------------
 
     @UseGuards(WebSocketGuard)
+    @UseInterceptors(WsExceptionFilter)
     @SubscribeMessage('createNewGroup')
-    async handleCreateNewGroup() {}
+    async handleCreateNewGroup(@MessageBody() data: {roomName: string}, @ConnectedSocket() client: Socket) {
+      await this.groupGrpsService.newGroup({roomName: data.roomName, authorId: client.data.user.id})
+    }
 
     @UseGuards(WebSocketGuard)
+    @UseInterceptors(WsExceptionFilter)
     @SubscribeMessage('addNewMember')
-    async handleNewMember() {}
+    async handleNewMember(@MessageBody() data: {roomName: string, memberId: number}, @ConnectedSocket() client: Socket) {
+      await this.groupGrpsService.newMember({roomName: data.roomName, memberId: data.memberId, authorId: client.data.user.id})
+    }
+
+    @UseGuards(WebSocketGuard)
+    @UseInterceptors(WsExceptionFilter)
+    @SubscribeMessage('deleteMember')
+    async handleDeleteMember(@MessageBody() data: {roomName: string, memberId: number}, @ConnectedSocket() client: Socket) {
+        await this.groupGrpsService.deleteMember({roomName: data.roomName, memberId: data.memberId, authorId: client.data.user.id})
+    }
+
+    //--------------------------------------------------------------------------
+
+
+    @UseGuards(WebSocketGuard)
+    @UseInterceptors(WsExceptionFilter)
+    @SubscribeMessage('group:newMessage')
+    async hanldeNewMessageGroup(@MessageBody() data: {message: string, roomName: string}, @ConnectedSocket() client: Socket) {
+      await this.groupGrpsService.addNewMessageGroup({message: data.message, roomName: data.roomName, authorId: client.data.user.id})
+    }
+
+    @UseGuards(WebSocketGuard)
+    @UseInterceptors(WsExceptionFilter)
+    @SubscribeMessage('group:updateMessage')
+    async handleUpdateMessage(@MessageBody() data: {message: string, roomName: string, messageId: string}, @ConnectedSocket() client: Socket) {
+      await this.groupGrpsService.updateMessageGroup({message: data.message, messageId: data.messageId, roomName: data.roomName, authorId: client.data.user.id})
+    }
+
+    @UseGuards(WebSocketGuard)
+    @UseInterceptors(WsExceptionFilter)
+    @SubscribeMessage('group:deleteMessage')
+    async handleDeleteMessage(@MessageBody() data: {messageId: string, roomName: string}, @ConnectedSocket() client: Socket) {
+      await this.groupGrpsService.deleteMessageGroup({messageId: data.messageId, roomName: data.roomName, authorId: client.data.user.id})
+    }
 
     async handleDisconnect(client: Socket) {
       console.log(`Client ${client.data.user} disconnected`);

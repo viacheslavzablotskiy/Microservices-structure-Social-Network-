@@ -37,8 +37,8 @@ import { ChatSocketService } from './providers/chat/chat.socket.provider';
         name: 'WEBSCOKET-GROUP-PATH',
         transport: Transport.GRPC,
         options: {
-          package: '',
-          protoPath: '',
+          package: 'websocketgroup',
+          protoPath: '@repo/proto/websocket-group.proto',
           url: '0.0.0.0:5011'
         }
       }

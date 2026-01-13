@@ -1,20 +1,6 @@
 
-
-class Data {
-    #hello;
-    constructor(hello) {
-        this.#hello = hello
-    }
-
-    async helloMethod(data = '') {
-        return data + this.#hello
-    }
+for (var data = 0; data < 3; data++) { 
+    setTimeout(() => {console.log(data)}, 1000)
 }
-
-
-const intstance = new Data('hello')
-const data = await new  Promise((resolve) => {resolve(intstance.helloMethod('hello'))}).catch((error) => console.error(error))
-console.log(data);
-
 
 
