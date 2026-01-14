@@ -58,6 +58,15 @@ import {MongooseModule, MongooseModuleOptions, } from "@nestjs/mongoose"
           protoPath: require.resolve('@repo/proto/dist-like.proto'),
           url: '0.0.0.0:5002'
         }
+      },
+      {
+        name: 'DIST-CHAT-PATH',
+        transport: Transport.GRPC,
+        options: {
+          package: 'distchat',
+          protoPath: require.resolve('@repo/proto/dist-chat.proto'),
+          url: '0.0.0.0:5012'
+        }
       }
     ]),
     JwtModule.registerAsync({

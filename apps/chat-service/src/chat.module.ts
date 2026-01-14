@@ -1,15 +1,20 @@
 import { Module } from '@nestjs/common';
-import { ChatController } from './controllers/chat.controller';
+import { ChatController } from './controllers/chat.message.controller';
 import { ChatService } from './providers/chat.service';
 import {ConfigModule, ConfigService} from '@nestjs/config'
 import {MongooseModule} from '@nestjs/mongoose'
 import { Room, RoomSchema } from './enities/room.entity';
 import { Message, MessageSchema } from './enities/message.entity';
 import { createClient } from 'redis';
+import { WebSocketGroupController } from './controllers/group.chat.controller';
+import { GroupService } from './providers/group.chat.service';
+import { Notification, NotificationSchema } from './enities/notifications.entity';
+import { GroupNotificationService } from './providers/group.notification.provider';
+import { NotificationGroupController } from './controllers/group.notification.controller';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
-    MongooseModule.forFeature([{name: Room.name, schema: RoomSchema}, {name: Message.name, schema: MessageSchema}]),
+    MongooseModule.forFeature([{name: Room.name, schema: RoomSchema}, {name: Message.name, schema: MessageSchema}, {name: Notification.name, schema: NotificationSchema}]),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -24,8 +29,8 @@ import { createClient } from 'redis';
       })
     }),
   ],
-  controllers: [ChatController],
-  providers: [ChatService, 
+  controllers: [ChatController, WebSocketGroupController, NotificationGroupController],
+  providers: [ChatService, GroupService, GroupNotificationService,
     {
       provide: 'REDIS_PUBLISH_INSTANCE',
       inject: [ConfigService],

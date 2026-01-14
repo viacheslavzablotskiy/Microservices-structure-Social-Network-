@@ -8,6 +8,7 @@ import {DeleteMessageInGroupType, type CreateNewGroupType, type CreateNewMesageI
     type DeleteMemberType, type NewMemberType, type UpdataMessageInGroupType
 } from '@repo/proto'
 import { type RedisClientType } from "redis";
+import {type MessageGroupEntityAndRedisPublish, type RedisGroupPublish} from '@repo/user-interfaces'
 
 
 
@@ -28,36 +29,18 @@ export class GroupService {
         return true
     }
 
-    async createNewGroup(data: CreateNewGroupType): Promise<void> {
-        const newGroup = new this.roomModel({
-            name: data.roomName,
-            roomId: data.roomId,
-            participiants: [],
-            isGroup: true
-        })
-
-        await newGroup.save()
-
-        this.clientRedisInstance.publish('group:member:createNewGroup', JSON.stringify(newGroup))
+    convertMongoDbEntityToJson(data: MessageType): MessageGroupEntityAndRedisPublish {
+        return {
+            _id: data._id.toString(),
+            roomId: data.roomId.toString(),
+            senderId: data.senderId,
+            attachments: data.attachments,
+            isEdited: data.isEdited,
+            isDeleted: data.isDeleted,
+            updatedAt: data.updatedAt.toISOString(),
+            createdAt: data.createdAt.toISOString()
+        }
     }
-
-    async addNewMemberToGroup(data: NewMemberType): Promise<void> {
-        const addedMember = await this.roomModel.updateOne(
-            {name: data.roomName, authorId: data.authorId},
-            {$addToSet: {participiants: data.memberId}}
-        ).exec()
-
-        this.clientRedisInstance.publish('group:member:newMember', JSON.stringify(addedMember))
-    }
-
-    async deleteMemberFromGroup(data: DeleteMemberType): Promise<void> {
-        const deletedMember = await this.roomModel.updateOne({name: data.roomName}, {
-            $pull: {participiants: data.memberId}
-        })
-
-        this.clientRedisInstance.publish('group:member:deleteMember', JSON.stringify(deletedMember))
-    }
-
 
     async newMessageInGroup(data: CreateNewMesageInGroupType): Promise<void> {
         const currentRoom = await this.roomModel.findOne({name: data.roomName})
@@ -71,8 +54,8 @@ export class GroupService {
             isDeleted: false,
             isEdited: false
         })
-
-        this.clientRedisInstance.publish('group:message:newMessage', JSON.stringify(createdMessage))
+        const body: RedisGroupPublish = {message: this.convertMongoDbEntityToJson(createdMessage), clientRoom: currentRoom!.roomId}
+        this.clientRedisInstance.publish('group:message:newMessage', JSON.stringify(body))
     }
     
 
@@ -80,24 +63,27 @@ export class GroupService {
         const room = await this.roomModel.findOne({name: data.roomName})
         this.verifyRoomAndMemberShip(room, data.authorId)
         
-        
-        const updatedMessage = this.messageModel.findOneAndUpdate(
+        const updatedMessage = await this.messageModel.findOneAndUpdate(
             {_id: data.messageId, roomId: room!._id},
             {$set: {isEdited: true, message: data.message}}, {new: true})
         
         if (!updatedMessage) throw new RpcException('Message could not ')
 
-        this.clientRedisInstance.publish('group:message:updateMessage', JSON.stringify(updatedMessage))
+        const body: RedisGroupPublish  = {message: this.convertMongoDbEntityToJson(updatedMessage), clientRoom: room!.roomId}
+
+        this.clientRedisInstance.publish('group:message:updateMessage', JSON.stringify(body))
     }
 
     async deleteMessageInGroup(data: DeleteMessageInGroupType): Promise<void> {
         const room = await this.roomModel.findOne({name: data.roomName})
         this.verifyRoomAndMemberShip(room, data.authorId)
 
-        const deletedMessage = this.messageModel.findOneAndUpdate(
+        const deletedMessage = await this.messageModel.findOneAndUpdate(
             {_id: data.messageId, roomId: room!._id},
             {$set: {isDeleted: true}}, {new: true})
+        if (!deletedMessage) throw new RpcException('Message could not delete, because there is not message with this data')
 
-        this.clientRedisInstance.publish('group:message:deleteMessage', JSON.stringify(deletedMessage))
+        const body: RedisGroupPublish = {message: this.convertMongoDbEntityToJson(deletedMessage), clientRoom: room!.roomId}
+        this.clientRedisInstance.publish('group:message:deleteMessage', JSON.stringify(body))
     }
 }

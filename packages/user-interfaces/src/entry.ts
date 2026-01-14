@@ -3,6 +3,7 @@ export * from './main-user-interfaces/user-entity-interaface'
 export * from './main_post_intefaces/post_intaaface'
 export * from './main_like_interfaces/like-interfaces'
 export * from './main_comment_interfaces/comment-interfaces'
+export * from './main_chat_interfaces/main_notification_interface'
 
 ///main schenas
 export * from './main-user-interfaces/zod-zchemas/login-schemas'

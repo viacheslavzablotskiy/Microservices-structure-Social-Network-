@@ -29,7 +29,7 @@ import { ChatSocketService } from './providers/chat/chat.socket.provider';
         transport: Transport.GRPC,
         options: {
             package: 'websocketchat',
-            protoPath: '@repo/proto/websocket-chat.proto',
+            protoPath: require.resolve('@repo/proto/websocket-chat.proto'),
             url: '0.0.0.0:5010'
         }
       },
@@ -38,7 +38,7 @@ import { ChatSocketService } from './providers/chat/chat.socket.provider';
         transport: Transport.GRPC,
         options: {
           package: 'websocketgroup',
-          protoPath: '@repo/proto/websocket-group.proto',
+          protoPath: require.resolve('@repo/proto/websocket-group.proto'),
           url: '0.0.0.0:5011'
         }
       }

@@ -18,37 +18,6 @@ export class GroupGRPSService implements OnModuleInit {
         this.groupWebsocketService = this.client.getService<WebSocketGroupService>('WebSocketGroupService')
     }
 
-
-    async newGroup(data: {roomName: string, authorId: number}): Promise<void> {
-        try {
-            const roomId = uuidv4()
-            const body: CreateNewGroupType = {...data, roomId: roomId}
-            await firstValueFrom(this.groupWebsocketService.createNewGroup(body))   
-        } catch (error) {
-            console.error(error)
-            throw new WsException('creation the room and group was failed')
-        }  
-    }
-
-    async newMember(data: NewMemberType): Promise<void> {
-        try {
-            await firstValueFrom(this.groupWebsocketService.addNewMember(data))   
-        } catch (error) {
-            console.error(error)
-            throw new WsException('Could not add new member')
-        }
-    }
-
-    async deleteMember(data: DeleteMemberType): Promise<void> {
-        try {
-            await firstValueFrom(this.groupWebsocketService.deleteMember(data))   
-        } catch (error) {
-            console.error(error)
-            throw new WsException(`Could not delete this member ${data.memberId}`)
-        }  
-    }
-
-
     async addNewMessageGroup(data: CreateNewMesageInGroupType): Promise<void> {
         try {
             await firstValueFrom(this.groupWebsocketService.createNewMessageGroup(data))   

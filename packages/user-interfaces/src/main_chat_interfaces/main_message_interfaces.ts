@@ -14,3 +14,13 @@ export interface RedisPublishData {
     message: Omit<MessageEntity, 'createdAt' | 'updatedAt'> & {createdAt: string, updatedAt: string},
     opponentId: number
 }
+
+
+export type MessageGroupEntityAndRedisPublish = Omit<MessageEntity, 'createdAt' | 'updatedAt'> & {createdAt: string, updatedAt: string}
+
+
+export type RedisGroupPublish = {
+    message: MessageGroupEntityAndRedisPublish,
+    clientRoom: string
+}
+

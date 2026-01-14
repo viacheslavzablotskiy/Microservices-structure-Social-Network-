@@ -85,8 +85,3 @@ export class MainCommentController {
     }
 }
 
-
-async function log(data: number): Promise<number> {
-    const result = await new Promise((resolve) => {resolve(data)}).then((data: number) => data)
-    return result
-}

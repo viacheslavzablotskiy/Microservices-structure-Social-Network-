@@ -14,7 +14,7 @@ async function bootstrap() {
     transport: Transport.GRPC,
     options: {
       package: 'websocketchat',
-      protoPath: '@repo/proto/websocket-chat.proto',
+      protoPath: require.resolve('@repo/proto/websocket-chat.proto'),
       url: '0.0.0.0:5010'
     }
   })
@@ -23,8 +23,17 @@ async function bootstrap() {
     transport: Transport.GRPC,
     options: {
       package: 'websocketgroup',
-      protoPath: '@repo/proto/websocket-chat.proto',
+      protoPath: require.resolve('@repo/proto/websocket-chat.proto'),
       url: '0.0.0.0:5011'
+    }
+  })
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'distchat',
+      protoPath: require.resolve('@repo/proto/dist-chat.proto'),
+      url: '0.0.0.0:5012'
     }
   })
 

@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package distchat;
+
+import "google/protobuf/empty.proto";
+
+// method for create group delete member and something like this
+service DistChatService {
+    // method that create new Group in chat-service
+    rpc CreateNewGroup(CreateNewGroupData) returns (google.protobuf.Empty);
+    // method that add new member to already exists group
+    rpc AddNewMember(AddNewMemberData) returns (google.protobuf.Empty);
+    // method that delete member from group
+    rpc DeleteMember(DeleteMemberData) returns (google.protobuf.Empty);
+}
+
+
+// data for create new group
+message CreateNewGroupData {
+    string room_name = 1;
+    int32 author_id = 2;
+    string room_id = 3;
+}
+
+// data for add new member
+message  AddNewMemberData{
+    string room_name = 1;
+    int32 author_id = 2;
+    int32 member_id = 3;
+}
+
+// data for delete already exists member
+message  DeleteMemberData{
+    string room_name = 1;
+    int32 author_id = 2;
+    int32 member_id = 3;
+}

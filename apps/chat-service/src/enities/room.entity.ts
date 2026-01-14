@@ -17,6 +17,9 @@ export class Room {
 
     @Prop({default: false})
     isGroup: boolean
+
+    createdAt: Date
+    updatedAt: Date
 }
 
 export type RoomType = HydratedDocument<Room>
