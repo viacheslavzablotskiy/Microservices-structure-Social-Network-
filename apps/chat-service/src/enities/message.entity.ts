@@ -4,11 +4,8 @@ import { Room } from "./room.entity";
 
 
 
-@Schema({timestamps: true})
+@Schema()
 export class Message {
-    @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true})
-    roomId: Types.ObjectId
-
     @Prop({type: Number, required: true})
     senderId: number
 
@@ -23,9 +20,6 @@ export class Message {
 
     @Prop({default: false})
     isDeleted: false
-
-    createdAt: Date
-    updatedAt: Date
 }
 
 

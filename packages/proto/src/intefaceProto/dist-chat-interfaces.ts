@@ -1,5 +1,6 @@
 import { Observable } from "rxjs"
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
+import { NotificationTypeDataProto, RoomTypeData } from "@repo/user-interfaces"
 
 export interface CreateNewGroupType {
     roomName: string,
@@ -17,7 +18,7 @@ export interface DeleteMemberType extends Omit<CreateNewGroupType, 'roomId'> {
 
 
 export interface DistChatService {
-    createNewGroup(data: CreateNewGroupType): Observable<Empty>,
-    addNewMember(data: NewMemberType): Observable<Empty>,
-    deleteMember(data: DeleteMemberType): Observable<Empty>,
+    createNewGroup(data: CreateNewGroupType): Observable<RoomTypeData>,
+    addNewMember(data: NewMemberType): Observable<NotificationTypeDataProto>,
+    deleteMember(data: DeleteMemberType): Observable<NotificationTypeDataProto>,
 }

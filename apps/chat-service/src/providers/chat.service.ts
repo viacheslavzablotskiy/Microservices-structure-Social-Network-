@@ -2,11 +2,12 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Connection, Model } from 'mongoose';
-import { Message, MessageType } from 'src/enities/message.entity';
+import { Message, MessageSchema, MessageType } from 'src/enities/message.entity';
 import { Room, RoomType } from 'src/enities/room.entity';
-import {MessageEntity, RedisPublishData} from '@repo/user-interfaces'
+import {ActionType, MessageEntity, MessageGroupEntityAndRedisPublish, RedisPublishData} from '@repo/user-interfaces'
 import {type  RedisClientType } from 'redis';
 import {DataToDeleteMessageChat, DataToUpdateMessageChat, SendMessageChatData} from '@repo/proto'
+import { MessageGroupDocument, MessageNotificationEntity } from 'src/enities/message.notificaiton.entitiy';
 
 @Injectable()
 export class ChatService{
@@ -14,14 +15,15 @@ export class ChatService{
   constructor(
     @InjectConnection() private connection: Connection,
     @InjectModel(Room.name) private roomModel: Model<Room>,
-    @InjectModel(Message.name) private messageModel: Model<Message>,
+    @InjectModel(MessageNotificationEntity.name) private readonly messNotifModel: Model<MessageNotificationEntity>,
     @Inject('REDIS_PUBLISH_INSTANCE') private readonly redis: RedisClientType
   ) {}
 
-  async convertToJson(data: MessageType) {
+  async convertToJson(data: MessageGroupDocument): Promise<MessageGroupEntityAndRedisPublish>{
     return {
-      _id: data._id.toString(),
+      id: data._id.toString(),
       roomId: data.roomId.toString(),
+      type: data.type,
       senderId: data.senderId,
       message: data.message,
       attachments: data.attachments,
@@ -46,13 +48,13 @@ export class ChatService{
         isRoomExisted = await this.roomModel.create([{ name: roomName, participiants: [data.opponentId, data.senderId], isGroup: false }], { session });
       }
 
-      const newMessage = await this.messageModel.create([{
+      const newMessage = await this.messNotifModel.discriminator(ActionType.MESSAGE_TYPE, MessageSchema).create([{
         roomId: isRoomExisted[0]._id,
         message: data.message,
         senderId: data.senderId,
         isDeleted: false,
         isEdited: false
-      }], {session: session}) 
+      }], {session: session})
 
       const redisData: RedisPublishData = {opponentId: data.opponentId, message: await this.convertToJson(newMessage[0])}
       this.redis.publish('chat:newMessage', JSON.stringify(redisData))
@@ -69,7 +71,7 @@ export class ChatService{
 
 
   async deleteMessageChat(data: DataToDeleteMessageChat): Promise<void> { 
-      const deletedMessage = await this.messageModel.findOneAndUpdate(
+      const deletedMessage = await this.messNotifModel.discriminator(ActionType.MESSAGE_TYPE, MessageSchema).findOneAndUpdate(
         {_id: data.messageId, senderId: data.senderId},
         {$set: {isDeleted: true}}, {new: true}
       )
@@ -80,9 +82,10 @@ export class ChatService{
   }
 
   async updateMessageChat(data: DataToUpdateMessageChat): Promise<void> {
-    const updatedMessage =  await this.messageModel.findOneAndUpdate(
-      {_id: data.messageId, senderId: data.senderId}, 
-      {$set: {...data, isEdited: true}}, {new: true})
+    const updatedMessage = await this.messNotifModel.discriminator(ActionType.MESSAGE_TYPE, MessageSchema).findOneAndUpdate(
+      {_id: data.messageId, senderId: data.senderId},
+      {$set: {message: data.message, isEdited: true}}, {new: true}
+    )
     if (!updatedMessage) throw new RpcException('There is not message with that condition')
     
     const redisData: RedisPublishData = {opponentId: data.opponentId, message: await this.convertToJson(updatedMessage)}

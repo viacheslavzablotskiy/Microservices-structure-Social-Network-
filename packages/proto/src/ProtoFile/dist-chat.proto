@@ -7,11 +7,11 @@ import "google/protobuf/empty.proto";
 // method for create group delete member and something like this
 service DistChatService {
     // method that create new Group in chat-service
-    rpc CreateNewGroup(CreateNewGroupData) returns (google.protobuf.Empty);
+    rpc CreateNewGroup(CreateNewGroupData) returns (GroupData);
     // method that add new member to already exists group
-    rpc AddNewMember(AddNewMemberData) returns (google.protobuf.Empty);
+    rpc AddNewMember(AddNewMemberData) returns (NotificationData);
     // method that delete member from group
-    rpc DeleteMember(DeleteMemberData) returns (google.protobuf.Empty);
+    rpc DeleteMember(DeleteMemberData) returns (NotificationData);
 }
 
 
@@ -34,4 +34,46 @@ message  DeleteMemberData{
     string room_name = 1;
     int32 author_id = 2;
     int32 member_id = 3;
+}
+
+// Type of the event
+enum EventType{
+   EVENT_TYPE_UNSPECIFIED = 0;
+   EVENT_TYPE_GROUP_CREATED = 1;
+   EVENT_TYPE_ADDED_MEMBER= 2;
+   EVENT_TYPE_DELETED_MEMBER= 3;
+  
+}
+// enum for define what type is object is
+enum ObjectType {
+  OBJECT_TYPE_UNSPECIFIED = 0;
+  OBJECT_TYPE_ROOM = 1;
+  OBJECT_TYPE_USER = 2;
+}
+
+// payload 
+message NotificationPayload {
+    string subject = 1;
+    int32 object = 2;
+    ObjectType object_type = 3;
+}
+
+// data for return data for add member and for delete member 
+message NotificationData {
+    string id = 1;
+    string room_id = 2;
+    EventType event = 3;
+    NotificationPayload payload = 4;
+    string created_at = 5;
+    string updated_at = 6;
+}
+
+// data for return for create new group
+message GroupData {
+    int32 id = 1;
+    string name = 2;
+    repeated int32 participiants = 3;
+    bool is_group = 4;
+    string created_at = 5;
+    string updated_at = 6;
 }

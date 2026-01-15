@@ -1,8 +1,12 @@
+import { ActionType } from "./message.notification.interface"
+
 export interface MessageEntity {
-    _id: string,
+    id: string,
+    type: ActionType,
     roomId: string,
     senderId: number,
     attachments?: string[],
+    message: string,
     isEdited: boolean,
     isDeleted: boolean,
     createdAt: Date,

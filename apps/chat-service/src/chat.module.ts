@@ -11,10 +11,17 @@ import { GroupService } from './providers/group.chat.service';
 import { Notification, NotificationSchema } from './enities/notifications.entity';
 import { GroupNotificationService } from './providers/group.notification.provider';
 import { NotificationGroupController } from './controllers/group.notification.controller';
+import { MessageNotificationEntity, MessageNotificationSchema } from './enities/message.notificaiton.entitiy';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
-    MongooseModule.forFeature([{name: Room.name, schema: RoomSchema}, {name: Message.name, schema: MessageSchema}, {name: Notification.name, schema: NotificationSchema}]),
+    MongooseModule.forFeature([{name: Room.name, schema: RoomSchema}, {
+      name: MessageNotificationEntity.name, schema: MessageNotificationSchema,
+      discriminators: [
+        {name: Message.name, schema: MessageSchema},
+        {name: Room.name, schema: RoomSchema}
+      ]
+    }]),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

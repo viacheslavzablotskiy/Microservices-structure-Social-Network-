@@ -2,13 +2,14 @@ import { Inject, Injectable } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Message, MessageType } from "src/enities/message.entity";
+import { Message, MessageSchema, MessageType } from "src/enities/message.entity";
 import { Room, RoomType } from "src/enities/room.entity";
 import {DeleteMessageInGroupType, type CreateNewGroupType, type CreateNewMesageInGroupType,
     type DeleteMemberType, type NewMemberType, type UpdataMessageInGroupType
 } from '@repo/proto'
 import { type RedisClientType } from "redis";
-import {type MessageGroupEntityAndRedisPublish, type RedisGroupPublish} from '@repo/user-interfaces'
+import {ActionType, type MessageGroupEntityAndRedisPublish, type RedisGroupPublish} from '@repo/user-interfaces'
+import { MessageGroupDocument, MessageNotificationEntity } from "src/enities/message.notificaiton.entitiy";
 
 
 
@@ -18,7 +19,7 @@ export class GroupService {
 
     constructor(
         @InjectModel(Room.name) private roomModel: Model<Room>,
-        @InjectModel(Message.name) private messageModel: Model<Message>,
+        @InjectModel(MessageNotificationEntity.name) private readonly messNotifModel: Model<MessageNotificationEntity>,
         @Inject('REDIS_PUBLISH_INSTANCE') private readonly clientRedisInstance: RedisClientType
     ) {}
 
@@ -29,10 +30,12 @@ export class GroupService {
         return true
     }
 
-    convertMongoDbEntityToJson(data: MessageType): MessageGroupEntityAndRedisPublish {
+    convertMongoDbEntityToJson(data: MessageGroupDocument): MessageGroupEntityAndRedisPublish {
         return {
-            _id: data._id.toString(),
+            id: data._id.toString(),
             roomId: data.roomId.toString(),
+            type: data.type,
+            message: data.message,
             senderId: data.senderId,
             attachments: data.attachments,
             isEdited: data.isEdited,
@@ -47,7 +50,7 @@ export class GroupService {
 
         this.verifyRoomAndMemberShip(currentRoom, data.authorId)
 
-        const createdMessage = await this.messageModel.create({
+        const createdMessage = await this.messNotifModel.discriminator(ActionType.MESSAGE_TYPE, MessageSchema).create({
             roomId: currentRoom!._id,
             senderId: data.authorId,
             message: data.message,
@@ -63,9 +66,10 @@ export class GroupService {
         const room = await this.roomModel.findOne({name: data.roomName})
         this.verifyRoomAndMemberShip(room, data.authorId)
         
-        const updatedMessage = await this.messageModel.findOneAndUpdate(
-            {_id: data.messageId, roomId: room!._id},
-            {$set: {isEdited: true, message: data.message}}, {new: true})
+        const updatedMessage = await this.messNotifModel.discriminator(ActionType.MESSAGE_TYPE, MessageSchema).findOneAndUpdate(
+            {_id: data.messageId, roomId: room!.id},
+            {$set: {isEdited: true, message: data.message}}, {new: true}
+        )
         
         if (!updatedMessage) throw new RpcException('Message could not ')
 
@@ -78,9 +82,10 @@ export class GroupService {
         const room = await this.roomModel.findOne({name: data.roomName})
         this.verifyRoomAndMemberShip(room, data.authorId)
 
-        const deletedMessage = await this.messageModel.findOneAndUpdate(
-            {_id: data.messageId, roomId: room!._id},
-            {$set: {isDeleted: true}}, {new: true})
+        const deletedMessage = await this.messNotifModel.discriminator(ActionType.MESSAGE_TYPE, MessageSchema).findOneAndUpdate(
+            {_id: data.messageId, roomId: room!.id},
+            {$set: {isDeleted: true}}, {new: true}
+        )
         if (!deletedMessage) throw new RpcException('Message could not delete, because there is not message with this data')
 
         const body: RedisGroupPublish = {message: this.convertMongoDbEntityToJson(deletedMessage), clientRoom: room!.roomId}
