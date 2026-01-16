@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ChatController } from './controllers/chat.message.controller';
-import { ChatService } from './providers/chat.service';
+import { ChatController } from './controllers/websokets/web.chat.message.controller';
+import { ChatService } from './providers/websocket_providers/web.chat.service';
 import {ConfigModule, ConfigService} from '@nestjs/config'
 import {MongooseModule} from '@nestjs/mongoose'
 import { Room, RoomSchema } from './enities/room.entity';
 import { Message, MessageSchema } from './enities/message.entity';
 import { createClient } from 'redis';
-import { WebSocketGroupController } from './controllers/group.chat.controller';
-import { GroupService } from './providers/group.chat.service';
+import { WebSocketGroupController } from './controllers/websokets/web.group.chat.controller';
+import { GroupService } from './providers/websocket_providers/web.group.chat.service';
 import { Notification, NotificationSchema } from './enities/notifications.entity';
-import { GroupNotificationService } from './providers/group.notification.provider';
-import { NotificationGroupController } from './controllers/group.notification.controller';
+import { GroupNotificationService } from './providers/websocket_providers/web.group.notification.provider';
+import { NotificationGroupController } from './controllers/websokets/web.group.notification.controller';
 import { MessageNotificationEntity, MessageNotificationSchema } from './enities/message.notificaiton.entitiy';
 
 @Module({

@@ -2,7 +2,7 @@ import { Controller, Inject } from "@nestjs/common";
 import { GrpcMethod, RpcException } from "@nestjs/microservices";
 import {type CreateNewGroupType, type CreateNewMesageInGroupType, type UpdataMessageInGroupType,
     type DeleteMemberType, type NewMemberType, type DeleteMessageInGroupType} from '@repo/proto'
-import { GroupService } from "src/providers/group.chat.service";
+import { GroupService } from "src/providers/websocket_providers/web.group.chat.service";
 
 @Controller()
 export class WebSocketGroupController {

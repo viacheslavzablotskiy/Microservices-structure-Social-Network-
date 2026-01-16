@@ -18,6 +18,7 @@ export class MessageNotificationEntity {
     updatedAt: Date
 }
 
+export type MessageNotificationDocument = HydratedDocument<MessageNotificationEntity>
 export type MessageGroupDocument = HydratedDocument<MessageNotificationEntity & Message>
 export type NotificationGroupDocument = HydratedDocument<MessageNotificationEntity & Notification>
 export const MessageNotificationSchema = SchemaFactory.createForClass(MessageNotificationEntity)

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { GrpcMethod, RpcException } from "@nestjs/microservices";
-import { GroupNotificationService } from "src/providers/group.notification.provider";
+import { GroupNotificationService } from "src/providers/websocket_providers/web.group.notification.provider";
 import {type CreateNewGroupType, type NewMemberType, type DeleteMemberType} from '@repo/proto'
 import {NotificationTypeDataProto, RoomTypeData} from '@repo/user-interfaces'
 

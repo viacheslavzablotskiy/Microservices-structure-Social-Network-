@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './controllers/chat.message.controller';
-import { AppService } from './providers/chat.service';
+import { AppService } from './providers/websocket_providers/web.chat.service';
 
 describe('AppController', () => {
   let appController: AppController;

@@ -57,9 +57,8 @@ export class ChatService{
       }], {session: session})
 
       const redisData: RedisPublishData = {opponentId: data.opponentId, message: await this.convertToJson(newMessage[0])}
-      this.redis.publish('chat:newMessage', JSON.stringify(redisData))
-
       await session.commitTransaction()
+      this.redis.publish('chat:newMessage', JSON.stringify(redisData))
       return newMessage[0]
     } catch (error) {
       await session.abortTransaction()

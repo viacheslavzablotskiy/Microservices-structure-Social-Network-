@@ -4,7 +4,7 @@ import {DistChatService} from "@repo/proto"
 import {v4 as uuidv4} from 'uuid'
 import {type CreateNewGroupType, type NewMemberType, type DeleteMemberType} from '@repo/proto'
 import { firstValueFrom } from "rxjs";
-import { mapEventTypeProtoToEnum, mapObjectProtoToEnum, NotificationTypeData, NotificationTypeDataForClient, NotificationTypeDataProto, RoomDocument } from "@repo/user-interfaces";
+import { mapActionTypeToBack, mapEventTypeProtoToEnum, mapObjectProtoToEnum, NotificationTypeData, NotificationTypeDataForClient, NotificationTypeDataProto, RoomDocument } from "@repo/user-interfaces";
 
 @Injectable()
 export class MainGrudGroupService implements OnModuleInit {
@@ -21,6 +21,7 @@ export class MainGrudGroupService implements OnModuleInit {
     async convertNotificationToEnum(data: NotificationTypeDataProto): Promise<NotificationTypeData> {
         return {
             ...data,
+            type: mapActionTypeToBack(data.type),
             payload: {
                 ...data.payload,
                 objectType: mapObjectProtoToEnum(data.payload.objectType)
@@ -29,6 +30,15 @@ export class MainGrudGroupService implements OnModuleInit {
         }
     }
 
+
+    async getGroupFirstData(data: {roomId: string}): Promise<void> {
+        const response = await firstValueFrom(this.distChatService.getGroupFirstMessages(data))
+    }
+
+
+    async getGroupOtherData(data: {roomId: string, lastId: string}) : Promise<void> {
+        const response = await firstValueFrom(this.distChatService.getGroupOtherMessages(data))
+    }
 
     async createNewGroup(data: Omit<CreateNewGroupType, 'roomId'>): Promise<RoomDocument> {
         const roomId = uuidv4()

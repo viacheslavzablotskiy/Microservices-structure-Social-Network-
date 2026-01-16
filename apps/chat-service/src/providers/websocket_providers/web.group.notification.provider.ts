@@ -71,15 +71,15 @@ export class GroupNotificationService {
             roomId: data.roomId,
             participiants: [],
             isGroup: true
-        })
+        }, {session: session})
             await newGroup.save()
-            await this.messNotificModel.discriminator(ActionType.NOTIFICATION_TYPE, NotificationSchema).create({
+            await this.messNotificModel.discriminator(ActionType.NOTIFICATION_TYPE, NotificationSchema).create([{
                 roomId: newGroup._id,
                 event: EventType.ADD_NEW_GROUP,
                 payload: {
                     object: (newGroup._id).toString(), subject: data.authorId, objectType: ObjectType.METHOD_ABOUT_GROUP
                 }
-            })
+            }], {session: session})
             await session.commitTransaction()
             const response = await this.convertMongoDBGroupToJson(newGroup)
             return response
@@ -100,23 +100,23 @@ export class GroupNotificationService {
 
             const addedMember = await this.roomModel.findOneAndUpdate(
             {name: data.roomName, authorId: data.authorId},
-            {$addToSet: {participiants: data.memberId}}, {new: true}
+            {$addToSet: {participiants: data.memberId}}, {new: true, session: session}
             ).exec()
 
             if (!addedMember) throw new RpcException(`Room ${data.roomName} not found or member coud not added`)
 
-            const newNotification = await this.messNotificModel.discriminator(ActionType.NOTIFICATION_TYPE, NotificationSchema).create({
+            const newNotification = await this.messNotificModel.discriminator(ActionType.NOTIFICATION_TYPE, NotificationSchema).create([{
                 roomId: addedMember._id,
                 event: EventType.ADD_NEW_MEMBER,
                 payload: {
                     object: (data.memberId).toString(), subject: data.authorId, objectType: ObjectType.METHOD_ABOUT_MEMBERS
                 }
-            })
+            }], {session: session})
 
-            const notification = await this.convertMognoDBEntityToJson(newNotification)
-            const body: NotificationRedisAcceppt = {notification: notification, clientRoom: addedMember.roomId}
-            this.clientRedisInstance.publish('group:member:newMember', JSON.stringify(body))   
+            const notification = await this.convertMognoDBEntityToJson(newNotification[0])
+            const body: NotificationRedisAcceppt = {notification: notification, clientRoom: addedMember.roomId} 
             await session.commitTransaction()
+            this.clientRedisInstance.publish('group:member:newMember', JSON.stringify(body))  
             return await this.convertNotificationToProto(notification)
         } catch (error) {
             await session.abortTransaction()
@@ -133,19 +133,19 @@ export class GroupNotificationService {
 
         try {
             const deletedMember = await this.roomModel.findOneAndUpdate({name: data.roomName}, {
-            $pull: {participiants: data.memberId}}, {new: true})   
+            $pull: {participiants: data.memberId}}, {new: true, session: session})   
                 
             if (!deletedMember) throw new RpcException(`Room ${data.roomName} not found or member could not deleted`)
 
-            const newNotification = await this.messNotificModel.discriminator(ActionType.NOTIFICATION_TYPE, NotificationSchema).create({
+            const newNotification = await this.messNotificModel.discriminator(ActionType.NOTIFICATION_TYPE, NotificationSchema).create([{
                 roomId: deletedMember._id, event: EventType.DELETE_MEMBER,
                 payload: {object:(data.memberId).toString(), subject: data.authorId, objectType: ObjectType.METHOD_ABOUT_MEMBERS}
-            })
+            }], {session: session})
 
-            const notification = await this.convertMognoDBEntityToJson(newNotification)
+            const notification = await this.convertMognoDBEntityToJson(newNotification[0])
             const body: NotificationRedisAcceppt = {notification: notification, clientRoom: deletedMember.roomId}
-            this.clientRedisInstance.publish('group:member:deleteMember', JSON.stringify(body))
             await session.commitTransaction()
+            this.clientRedisInstance.publish('group:member:deleteMember', JSON.stringify(body))
             return await this.convertNotificationToProto(notification)
         } catch (error) {
             await session.abortTransaction()

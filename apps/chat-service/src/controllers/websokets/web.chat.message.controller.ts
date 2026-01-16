@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { ChatService } from '../providers/chat.service';
+import { ChatService } from 'src/providers/websocket_providers/web.chat.service';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import {type SendMessageChatData, type DataToDeleteMessageChat, type DataToUpdateMessageChat} from '@repo/proto'
 

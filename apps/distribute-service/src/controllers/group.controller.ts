@@ -27,7 +27,11 @@ export class ChatController {
     async initialSetMessageOrOtherData(
         @Req() req: Request, @Param('roomId') roomId: string, @Query('after') after: string   // Date
     ): Promise<void> {
-
+        if (!req.user) throw new UnauthorizedException('you are not authorizate')
+        if (!after) {
+            return await this.maingroupService.getGroupFirstData({roomId: roomId})
+        }
+        return await this.maingroupService.getGroupOtherData({roomId: roomId, lastId: after})
     }
 
 
