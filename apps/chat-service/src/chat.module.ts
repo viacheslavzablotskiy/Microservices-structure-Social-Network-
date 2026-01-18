@@ -26,8 +26,7 @@ import { MessageNotificationEntity, MessageNotificationSchema } from './enities/
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
-        uri: `mongodb://${config.get<string>('MONGO_USER')}:${config.get<string>('MONGO_PASS')}
-        @${config.get<string>('REPLICA_SETS_HOSTS')}/${config.get<string>('MONGO_DB')}`,
+        uri: `mongodb://${config.get<string>('MONGO_USER')}:${config.get<string>('MONGO_PASS')}@${config.get<string>('REPLICA_SETS_HOSTS')}/${config.get<string>('MONGO_DB')}`,
         authSource: config.get<string>('MONGO_AUTH_SOURCE'),
         replicaSet: config.get<string>('REPLICA_SETS_NAME'),
         autoCreate: false,

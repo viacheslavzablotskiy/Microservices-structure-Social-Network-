@@ -18,7 +18,7 @@ export interface DataToUpdateMessageChat extends DataToDeleteMessageChat {
     message: string
 }
 
-export interface WebScoketChatService {
+export interface WebSocketChatService {
     sendMessageChat(data: SendMessageChatData): Observable<Empty>,
     updateMessageChat(data: DataToUpdateMessageChat): Observable<Empty>,
     deleteMessageChat(data: DataToDeleteMessageChat): Observable<Empty>

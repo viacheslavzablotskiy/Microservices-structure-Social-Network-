@@ -5,7 +5,7 @@ package websocketchat;
 import "google/protobuf/empty.proto";
 
 //Service for sending Messages to the chat-service
-service  WebscoketChatService{
+service  WebsocketChatService{
     // method that send data to chat-service
     rpc SendMessageChat(SendMessageChat) returns (google.protobuf.Empty);
     // method that update message in the conversation

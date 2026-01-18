@@ -8,20 +8,24 @@ import {AuthStragetyModule} from '@repo/api'
 import {createClient} from 'redis'
 import { ChatGPRCService } from './providers/chat/chat.grpc.provider';
 import { ChatSocketService } from './providers/chat/chat.socket.provider';
+import { GroupGRPSService } from './providers/group/group.grpc.provider';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     JwtModule.registerAsync({
+      global: true,
       inject: [ConfigService],
-      useFactory: async (config: ConfigService) => ({
+      useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_SECRET', ''),
         signOptions: {expiresIn: config.get<StringValue>('JWT_EXPIRES_IN', '5m')}
       })
     }),
     AuthStragetyModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({refrechTokenSecret: config.get<string>('JWT_REFRESH_SECRET', '')})
+      useFactory: (config: ConfigService) => ({
+        refrechTokenSecret: config.get<string>('JWT_REFRESH_SECRET') || ''
+      })
     }),
     ClientsModule.register([
       {
@@ -45,7 +49,7 @@ import { ChatSocketService } from './providers/chat/chat.socket.provider';
     ])
   ],
   controllers: [],
-  providers: [GroupSerivce, ChatGPRCService, ChatSocketService,
+  providers: [GroupSerivce, ChatGPRCService, ChatSocketService, GroupGRPSService,
     {
       provide: 'REDIS_CLIENT_INSTANCE',
       inject: [ConfigService],

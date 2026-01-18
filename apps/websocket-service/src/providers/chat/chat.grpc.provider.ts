@@ -1,18 +1,18 @@
 import { Injectable, OnModuleInit, Inject } from "@nestjs/common";
 import { type ClientGrpc } from "@nestjs/microservices";
-import {WebScoketChatService, type SendMessageChatData, type DataToUpdateMessageChat, type DataToDeleteMessageChat} from '@repo/proto' 
+import {WebSocketChatService, type SendMessageChatData, type DataToUpdateMessageChat, type DataToDeleteMessageChat} from '@repo/proto' 
 import { firstValueFrom } from "rxjs";
 
 @Injectable()
 export class ChatGPRCService implements OnModuleInit {
-    private websocketChatService: WebScoketChatService
+    private websocketChatService: WebSocketChatService
 
     constructor(
         @Inject('WEBSOCKET-CHAT-PATH') private readonly client: ClientGrpc 
     ) {}
     
     onModuleInit() {
-        this.websocketChatService = this.client.getService<WebScoketChatService>('WebScoketChatService')
+        this.websocketChatService = this.client.getService<WebSocketChatService>('WebsocketChatService')
     }
 
 

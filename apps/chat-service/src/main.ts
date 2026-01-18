@@ -23,7 +23,7 @@ async function bootstrap() {
     transport: Transport.GRPC,
     options: {
       package: 'websocketgroup',
-      protoPath: require.resolve('@repo/proto/websocket-chat.proto'),
+      protoPath: require.resolve('@repo/proto/websocket-group.proto'),
       url: '0.0.0.0:5011'
     }
   })

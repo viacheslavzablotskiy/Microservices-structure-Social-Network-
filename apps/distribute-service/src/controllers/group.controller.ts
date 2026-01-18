@@ -11,7 +11,7 @@ import { MainGrudGroupService } from "src/providers/group.service";
 
 @ApiTags('group')
 @Controller('group')
-export class ChatController {
+export class MainGroupController {
 
     constructor(
         private readonly maingroupService: MainGrudGroupService
