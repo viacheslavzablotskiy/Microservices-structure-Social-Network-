@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
-import { CommentController } from './comment.controller';
+import { CommentController } from './controllers/comment.controller';
 import { CommentService } from './providers/comment.service';
 import { CrudCommentService } from './providers/crud.comment.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import {TypeOrmModule} from '@nestjs/typeorm'
 import { CommentEnity } from './entitis/comment.entity';
+import {CachePackageMdoule} from "@repo/chache-package"
+import EventCommentService from './providers/eventPatter.comment';
+import {ConnectionModule} from '@repo/rabbitmq-package'
+import { RpcExceptionFilter } from '@repo/api';
+import { CacheInterceptorPage } from './settings/main.interceptors';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
@@ -21,12 +26,24 @@ import { CommentEnity } from './entitis/comment.entity';
         entities: ['dist/**/*.entity{.js,.ts}'],
         migrations: ['dist/src/migrations/*{.js,.ts}'],
         migrationsTableName: '_migrationsComment',
+        migrationsRun: true,
         synchronize: false,
         logging: true
       })
+    }),
+    CachePackageMdoule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        REDIS_URL: config.get<string>('REDIS_URL_PATH') || ''
+      })
+    }),
+    ConnectionModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({RABBITMQ_URL: config.get<string>('RABBIT_MQ_PATH') || ''})
     })
   ],
   controllers: [CommentController],
-  providers: [CommentService, CrudCommentService],
+  providers: [CommentService, CrudCommentService, EventCommentService,
+     RpcExceptionFilter, CacheInterceptorPage],
 })
 export class AppModule {}

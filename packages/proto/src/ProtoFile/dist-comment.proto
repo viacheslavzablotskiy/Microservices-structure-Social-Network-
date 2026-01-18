@@ -6,53 +6,76 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 
+//Comment service
 service DistCommentService {
+    // get initial data
     rpc GetInitialCommentData (CommentPostId) returns (ListComments);
+    // get data after last id
     rpc GetOtherCommentData (CommentPostIdAndId) returns (ListComments);
-    rpc CreateNewComment (CreateNewCommentData) returns (google.protobuf.Empty);
-    rpc UpdateComment (UpdateCommentData) returns (google.protobuf.Empty);
+    // creation new comment
+    rpc CreateNewComment (CreateNewCommentData) returns (CommentProto);
+    // update already created comment
+    rpc UpdateComment (UpdateCommentData) returns (CommentProto);
+    // delete already existed comment
     rpc DeleteComment (DeleteCommentData) returns (google.protobuf.Empty);
+    // delete all comment after delete the post
+    rpc GetCountofLike (GetidsPosts) returns (ReturnCountComment);
 }
 
 
-
+// jusr postId
 message CommentPostId {
-    int32 postId = 1;
+    int32 post_id = 1;
 }
 
+// get commetns with offset
 message CommentPostIdAndId {
-    int32 postId = 1;
-    int32 lastId = 2;
+    int32 post_id = 1;
+    int32 last_id = 2;
 }
 
-
+// whoel comment proto
 message CommentProto {
     int32 id = 1;
-    int32 userId = 2;
-    int32 postId = 3;
+    int32 user_id = 2;
+    int32 post_id = 3;
     string content = 4;
-    google.protobuf.Empty createdAt = 5;
-    google.protobuf.Empty updatedAt = 6;
+    google.protobuf.Timestamp created_at = 5;
+    google.protobuf.Timestamp updated_at = 6;
 }
 
+// Array of the comment
 message ListComments {
     repeated CommentProto comments = 1;
 }
 
+// data for creation new comment
 message CreateNewCommentData {
-    int32 userId = 1;
-    int32 postId = 2;
+    int32 user_id = 1;
+    int32 post_id = 2;
     string content = 3;
 }
 
-
+// data for update already existed comment
 message UpdateCommentData {
     int32 id = 1;
-    int32 postid = 2;
+    int32 user_id = 2;
     string content = 3;
 }
 
+//data for delete already existed comment
 message DeleteCommentData {
     int32 id = 1;
-    int32 postId = 2;
+    int32 user_id = 2;
+    int32 post_id = 3;
+}
+
+// get all ids of the posts
+message GetidsPosts {
+    repeated int32 post_ids = 1;
+}
+
+// data that consist count of the comment under every post
+message ReturnCountComment {
+    map<int32, int32> comments = 1;
 }

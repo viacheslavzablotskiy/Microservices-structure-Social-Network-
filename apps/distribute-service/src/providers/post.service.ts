@@ -1,58 +1,118 @@
-import { Inject, Injectable, OnModuleInit } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable, OnModuleInit } from "@nestjs/common";
 import { type ClientGrpc } from "@nestjs/microservices";
 import {convertTimeStampToDate, DistPostService} from '@repo/proto'
-import { Post_Entity } from "@repo/user-interfaces";
+import { Post_Entity, RetrunPostEntity } from "@repo/user-interfaces";
 import { firstValueFrom } from "rxjs";
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
+import { MainCommentService } from "./comment.service";
+import { LikeMainService } from "./like.service";
 
 @Injectable()
 export class MainPostService implements OnModuleInit{
     private distPostService: DistPostService
 
-    constructor(@Inject('DIST-POST-PATH') private client: ClientGrpc) {}
+    constructor(
+        @Inject('DIST-POST-PATH') private client: ClientGrpc,
+        private readonly mainCommentService: MainCommentService,
+        private readonly likeService: LikeMainService
+    ) {}
 
     onModuleInit() {
         this.distPostService = this.client.getService<DistPostService>('DistPostService')
     }
 
 
-    async getInitialPostsData(): Promise<Post_Entity[]> {
-        const response = await firstValueFrom(this.distPostService.getInitialPosts({})) ///there we need change
+    async getInitialPostsData(reqUser: number): Promise<RetrunPostEntity[]> {
+        try {
+            const response = await firstValueFrom(this.distPostService.getInitialPosts({}))
+            if (!response.posts) return []
+            const postIds = response.posts.map(post => post.id)
 
-        return response.map((post) => {
-            return {
-                ...post,
-                createdAt: convertTimeStampToDate(post.createdAt),
-                updatedAt: convertTimeStampToDate(post.updatedAt)
-            }
+
+            const [{comments}, {likes}] = await Promise.all([
+                this.mainCommentService.getCountofComment(postIds),
+                this.likeService.likeCountOfPost(postIds, reqUser)
+            ])
+
+            return response.posts.map((post) => {
+                return {
+                    ...post,
+                    createdAt: convertTimeStampToDate(post.createdAt),
+                    updatedAt: convertTimeStampToDate(post.updatedAt),
+                    likeCOunt: likes[post.id].like,
+                    countComent: comments[post.id],
+                    isLiked: likes[post.id].isLiked
+                }
+            }) 
+        } catch (error) {
+            throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
+                cause: error
+            })
+        }
+    }
+
+    async getOtherPartOfData(data: {lastId: number, reqUser: number}): Promise<RetrunPostEntity[]> {
+        try {
+            const response = await firstValueFrom(this.distPostService.getSomePartPosts(data))
+            if (!response.posts) return []
+            const postIds = response.posts.map(post => post.id)
+
+            const [{comments}, {likes}] = await Promise.all([
+                this.mainCommentService.getCountofComment(postIds),
+                this.likeService.likeCountOfPost(postIds, data.reqUser)
+            ])
+
+            return response.posts.map((post) => {
+                return {
+                    ...post,
+                    createdAt: convertTimeStampToDate(post.createdAt),
+                    updatedAt: convertTimeStampToDate(post.updatedAt),
+                    likeCOunt: likes[post.id].like,
+                    isLiked: likes[post.id].isLiked,
+                    countComent: comments[post.id]
+                }
+            })
+        } catch (error) {
+            throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
+                cause: error
+            })
+        }
+    }
+
+    async creationNewPost(data: Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>) : Promise<Post_Entity> {
+        const response = await firstValueFrom(this.distPostService.createNewPost(data)).catch((error) => {
+            throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
+                cause: error
+            })
         })
+        return {
+            ...response,
+            createdAt: convertTimeStampToDate(response.createdAt),
+            updatedAt: convertTimeStampToDate(response.updatedAt)
+        }
     }
 
-    async getOtherPartOfData(data: {lastId: number}): Promise<Post_Entity[]> {
-        const response = await firstValueFrom(this.distPostService.getSomePartPosts(data))
-
-        return response.map((post) => {
-            return {
-                ...post,
-                createdAt: convertTimeStampToDate(post.createdAt),
-                updatedAt: convertTimeStampToDate(post.updatedAt)
-            }
-        })
+    async updatePost(data: Partial<Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'userId' | 'id'>>
+        & Pick<Post_Entity, 'id' | 'userId'>
+    ) : Promise<Post_Entity> {
+        const response = await firstValueFrom(this.distPostService.updatePost(data)).catch((error) => {
+            throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {cause: error})
+        }) /// there we return Post_Entity_Proto
+        return {
+            ...response,
+            createdAt: convertTimeStampToDate(response.createdAt),
+            updatedAt: convertTimeStampToDate(response.updatedAt)
+        }
     }
 
-    async creationNewPost(data: Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>) : Promise<Empty> {
-        await firstValueFrom(this.distPostService.createNewPost(data))
-        return new Empty()
-    }
-
-    async updatePost(data: Partial<Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>>) : Promise<Empty> {
-        await firstValueFrom(this.distPostService.updatePost(data)) /// there we return Post_Entity_Proto
-        return new Empty()
-    }
-
-    async deletePost(data: {id: number}): Promise<Empty> {
-        await firstValueFrom(this.distPostService.deletePost(data)) /// there we need add RabbitMq method to delete all comments and likes
-        /// via async, and fire-forget
-        return new Empty()
+    async deletePost(data: {id: number, userId: number}): Promise<Empty> {
+        try {
+            await firstValueFrom(this.distPostService.deletePost(data)) 
+            return new Empty()
+        } catch (error) {
+            throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
+                cause: error
+            })
+        }
     }
 }

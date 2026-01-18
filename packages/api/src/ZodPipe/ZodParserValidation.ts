@@ -16,24 +16,24 @@ export class ZodValidationPipe<T extends ZodType<any, any, any>> implements Pipe
 
         throw new BadRequestException({
             source: metadata.type,
-            errors: this.formatZodErrors(paredValue.error)
+            errors: paredValue.error
         })
     }
 
 
-    private formatZodErrors(error: ZodError) {
-        const fieldErrors: Record<string, string[]> = {};
-        const formattedData = error.format();
+//     private formatZodErrors(error: ZodError) {
+//         const fieldErrors: Record<string, string[]> = {};
+//         const formattedData = error.format();
 
-        for (const [key, entry] of Object.entries(formattedData) as [string, {_errors: string[]}][]) {
-            if (key === '_errors') continue
-            if (entry && entry._errors.length > 0) {
-                fieldErrors[key] = entry._errors
-            }
-        }
+//         for (const [key, entry] of Object.entries(formattedData) as [string, {_errors: string[]}][]) {
+//             if (key === '_errors') continue
+//             if (entry && entry._errors.length > 0) {
+//                 fieldErrors[key] = entry._errors
+//             }
+//         }
 
-        return fieldErrors
-  }
+//         return fieldErrors
+//   }
 }
 
 

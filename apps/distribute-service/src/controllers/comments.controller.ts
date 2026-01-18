@@ -1,17 +1,29 @@
-import { Controller, Query, Get, BadRequestException, Param, Body, Post } from "@nestjs/common";
+import { Controller, Query, Get, BadRequestException, Param, Body, Post, UseGuards, Delete, Patch, Req, UnauthorizedException, UseInterceptors } from "@nestjs/common";
 import {MainCommentService} from '../providers/comment.service'
-import { ZodValidationPipe } from "@repo/api";
+import { JWTAuthGuard, ZodValidationPipe } from "@repo/api";
 import {CreationCommentSchema, type CreationCommentType, UpdatingCommentSchema,
      type UpdatingCommentType, DeleteCommentSchema, type DeleteCommentType,
      CommentEntity} from '@repo/user-interfaces'
+import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiNoContentResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { CommentEntitySwagger, CreatioNcommentSwagger, DeleteCommentSwagger, UpdationCommentSwagger } from "src/documentation_classes/comments.swagger";
+import { UpdationPostSwagger } from "src/documentation_classes/post.swagger";
+import { type Request } from "express";
+import { TimersIntercertor } from "src/settings/main.interceptors";
 
-
+@ApiTags('comments')
 @Controller('comments')
 export class MainCommentController {
 
     constructor(private readonly commentService: MainCommentService) {}
 
-    @Get(':postId')
+    @ApiBearerAuth('auth-part')
+    @ApiCookieAuth()
+    @UseGuards(JWTAuthGuard)
+    @Get(':postId') 
+    @ApiOperation({summary: 'get comments', description: 'get protion of the comment'})
+    @ApiQuery({name: 'after', type: String, required: false, description: 'what last id'})
+    @ApiResponse({type: CommentEntitySwagger, isArray: true, description: 'your answer'})
+    @UseInterceptors(TimersIntercertor)
     async handleLoadMoreComments(
         @Query('after') after?: string,
         @Param('postId') postId?: string,
@@ -20,27 +32,56 @@ export class MainCommentController {
         if (!after) {
             return await this.commentService.getInitialCommentData({postId: Number(postId)})
         }
-        return await this.commentService.getOtherPartOfData({lastId: Number(after), postId: Number(postId)})    ///There on the client side
+        return await this.commentService.getOtherPartOfData({lastId: Number(after), postId: Number(postId)})    
     } 
-                                                                                                                ///dispatch nextCursor
+
+    @ApiBearerAuth('auth-part')
+    @ApiCookieAuth()
+    @UseGuards(JWTAuthGuard)                                                                                                            
     @Post('create')
+    @ApiOperation({summary: 'creation new comment', description: 'creation new comment'})
+    @ApiBody({type: CreatioNcommentSwagger})
+    @ApiNoContentResponse({description: 'you created comment successfully'})
     async hadleCreateNewComent(
+        @Req() req: Request,
         @Body(new ZodValidationPipe(CreationCommentSchema)) dto: CreationCommentType
-    ) : Promise<void> {
-        await this.commentService.creationNewComment(dto)
+    ) : Promise<CommentEntity> {
+        if (!req.user) throw new UnauthorizedException('you dont have token (comment)')
+
+        return await this.commentService.creationNewComment({...dto, userId: req.user?.userId})
     }
 
-    @Post('create')
+    @ApiBearerAuth('auth-part')
+    @ApiCookieAuth()
+    @UseGuards(JWTAuthGuard)
+    @Patch(':id')
+    @ApiOperation({summary: 'updation comments', description: 'update your comment'})
+    @ApiBody({type: UpdationCommentSwagger})
+    @ApiNoContentResponse({description: 'you update your comment successfully'})
     async handleUpdateComment(
+        @Req() req: Request,
+        @Param('id') id: string,
         @Body(new ZodValidationPipe(UpdatingCommentSchema)) dto: UpdatingCommentType
-    ): Promise<void> {
-        await this.commentService.updationNewComment(dto)
+    ): Promise<CommentEntity> {
+        if (!req.user) throw new UnauthorizedException('you dont have the token')
+        return await this.commentService.updationNewComment({content: dto.content, id: Number(id), userId: req.user.userId})
     }
 
-    @Post('delete')
+    @ApiBearerAuth('auth-part')
+    @ApiCookieAuth()
+    @UseGuards(JWTAuthGuard)
+    @Delete(":id")
+    @ApiOperation({summary: 'delete comments', description: 'delete your comment'})
+    @ApiQuery({name: 'postId', type: String, required: true, description: 'for double validation'})
+    @ApiNoContentResponse({description: 'you delete your comment successfully'})
     async handleDeleteComment(
-     @Body(new ZodValidationPipe(DeleteCommentSchema)) dto: DeleteCommentType
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Query('postId') postId: string
     ) : Promise<void> {
-        await this.commentService.deleteComment(dto)
+        if (!req.user) throw new UnauthorizedException('you dont have the token')
+        
+        await this.commentService.deleteComment({userId: req.user.userId, id: Number(id), postId: Number(postId)})
     }
 }
+

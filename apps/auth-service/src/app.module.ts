@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AuthService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -43,22 +43,6 @@ import {CachePackageMdoule} from '@repo/chache-package'
           url: '0.0.0.0:5004'
         }
       },
-      // {
-      //   name: 'AUTH_RABBITMQ_USER',
-      //   transport: Transport.RMQ,
-      //   options: {
-      //     urls: ['amqp://localhost:5672'],
-      //     queue: 'user_queue',
-      //     noAck: false, 
-      //     queueOptions: {
-      //       durable: true,  /// all left if you restart rabbit
-      //       arguments: {
-      //         'x-dead-letter-exchange': 'my.dead.letter.exchange',
-      //         'x-dead-letter-routing-key': 'my.dead.letter.queue'
-      //       }
-      //     }
-      //   }
-      // }
     ]),
     CachePackageMdoule.registerAsync({
       inject: [ConfigService],
@@ -70,7 +54,7 @@ import {CachePackageMdoule} from '@repo/chache-package'
   controllers: [AppController],
   providers: [AuthService],
 })
-export class AppModule {}
+export class AppModule{}
 
 
 

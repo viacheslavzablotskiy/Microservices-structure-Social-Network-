@@ -25,11 +25,15 @@
     "./dist-auth.proto": "./src/ProtoFile/dist-auth.proto",
     "./dist-post.proto": "./src/ProtoFile/dist-post.proto",
     "./dist-like.proto": "./src/ProtoFile/dist-like.proto",
-    "./dist-comment.proto" : "./src/ProtoFile/dist-comment.proto"
+    "./dist-comment.proto" : "./src/ProtoFile/dist-comment.proto",
+    "./websocket-chat.proto": "./src/ProtoFile/websocket-chat.proto",
+    "./websocket-group.proto": "./src/ProtoFile/websocket-group.proto",
+    "./dist-chat.proto": "./src/ProtoFile/dist-chat.proto"
   },
   "dependencies": {
     "@nestjs/mapped-types": "*",
-    "@repo/static-data": "*"
+    "@repo/static-data": "1.0.0",
+    "@repo/user-interfaces": "1.0.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",

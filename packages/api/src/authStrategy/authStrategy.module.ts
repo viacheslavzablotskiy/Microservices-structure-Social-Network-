@@ -1,6 +1,7 @@
 import { Module, DynamicModule, Inject } from '@nestjs/common'
 import { AuthCreationToken } from './authSignJWT';
 import { AuthGuardStrategy } from './authStrategy.guard';
+import { JWTAuthGuard } from './authJWTGuard';
 
 
 
@@ -12,7 +13,7 @@ export class AuthStragetyModule {
     }): DynamicModule {
         return {
             module: AuthStragetyModule,
-            providers: [AuthCreationToken, AuthGuardStrategy,
+            providers: [AuthCreationToken, AuthGuardStrategy, JWTAuthGuard,
                 {
                     provide: 'JWT_REFRESH_SECRET',
                     inject: options.inject,
@@ -20,7 +21,7 @@ export class AuthStragetyModule {
                 }
             ],
             controllers: [],
-            exports: [AuthCreationToken, AuthGuardStrategy],
+            exports: [AuthCreationToken, AuthGuardStrategy, JWTAuthGuard],
         }
     }
 }

@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package distchat;
+
+import "google/protobuf/empty.proto";
+
+// method for create group delete member and something like this
+service DistChatService {
+    // method that create new Group in chat-service
+    rpc CreateNewGroup(CreateNewGroupData) returns (GroupData);
+    // method that add new member to already exists group
+    rpc AddNewMember(AddNewMemberData) returns (NotificationData);
+    // method that delete member from group
+    rpc DeleteMember(DeleteMemberData) returns (NotificationData);
+    // get first times messages and notificaiions for group
+    rpc GetGroupFirstMessages(FristGroupTimeData) returns (MessageOrNotificationProtoData);
+    // get other times messages and notificaitons for group
+    rpc GetGroupOtherMessages(OtherGroupTimeData) returns (MessageOrNotificationProtoData);
+    // get fist times messages and notification for chats
+    rpc GetChatFirstMessages(FirstChatTimeData) returns (MessagesReturnValue);
+    // get other times messages and notification for chats
+    rpc GetChatOtherMessages(OtherChatTimeData) returns (MessagesReturnValue);
+}
+
+
+// data for create new group
+message CreateNewGroupData {
+    string room_name = 1;
+    int32 author_id = 2;
+    string room_id = 3;
+}
+
+// data for add new member
+message  AddNewMemberData{
+    string room_name = 1;
+    int32 author_id = 2;
+    int32 member_id = 3;
+}
+
+// data for delete already exists member
+message  DeleteMemberData{
+    string room_name = 1;
+    int32 author_id = 2;
+    int32 member_id = 3;
+}
+
+// Type of the event
+enum EventType{
+   EVENT_TYPE_UNSPECIFIED = 0;
+   EVENT_TYPE_GROUP_CREATED = 1;
+   EVENT_TYPE_ADDED_MEMBER= 2;
+   EVENT_TYPE_DELETED_MEMBER= 3;
+  
+}
+// enum for define what type is object is
+enum ObjectType {
+  OBJECT_TYPE_UNSPECIFIED = 0;
+  OBJECT_TYPE_ROOM = 1;
+  OBJECT_TYPE_USER = 2;
+}
+// enum for the type of the whole document
+enum ActionType {
+    ACTION_TYPE_UNSPECIFIED = 0;
+    ACTION_TYPE_MESSAGE= 1;
+    ACTION_TYPE_NOTIFICATION= 3;
+}
+
+// payload 
+message NotificationPayload {
+    string subject = 1;
+    int32 object = 2;
+    ObjectType object_type = 3;
+}
+
+// data for return data for add member and for delete member 
+message NotificationData {
+    string id = 1;
+    string room_id = 2;
+    ActionType type = 3;
+    EventType event = 4;
+    NotificationPayload payload = 5;
+    string created_at = 6;
+    string updated_at = 7;
+}
+
+// data for return for create new group
+message GroupData {
+    int32 id = 1;
+    string name = 2;
+    repeated int32 participiants = 3;
+    bool is_group = 4;
+    string created_at = 5;
+    string updated_at = 6;
+}
+
+//data for get first buch of the message or notifiacitons
+message FristGroupTimeData {
+    string room_id = 1;
+}
+
+// data for get other buchs of the messages and notificaitons
+message OtherGroupTimeData {
+    string room_id = 1;
+    string last_id = 2;
+}
+
+
+//data for get first bunch of the messages and notification for chats
+message FirstChatTimeData {
+    string chat_id = 1;
+}
+// data for get first bunch of the messages and notification for chats
+message OtherChatTimeData {
+    string chat_id = 1;
+    string last_id = 2;
+}
+
+// message entity proto
+message MessageName {
+    int32 id = 1;
+    int32 room_id = 2;
+    ActionType type = 3;
+    string created_at = 4;
+    string updated_at = 5;
+    int32 sender_id = 6;
+    repeated int32 attachments = 7;
+    string message = 8;
+    bool is_deleted = 9;
+    bool is_edited = 10;
+}
+
+// typing of the union 
+message PayloadItem {
+    oneof payload {
+        MessageName messages = 1;
+        NotificationData notifications = 2;
+    }
+}
+// message or notificaiton data
+message MessageOrNotificationProtoData {
+    repeated PayloadItem payload = 1;
+}
+
+// return value for chats
+message MessagesReturnValue {
+    repeated MessageName messages = 1;
+}

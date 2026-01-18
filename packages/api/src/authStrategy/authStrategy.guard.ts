@@ -3,6 +3,10 @@ import {PassportStrategy} from '@nestjs/passport'
 import { ExtractJwt, Strategy } from "passport-jwt";
 import {ConfigService} from '@nestjs/config'
 
+export interface JwtTokenDto {
+    userId: number,
+    login: string,
+}
 
 @Injectable()
 export class AuthGuardStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -16,11 +20,11 @@ export class AuthGuardStrategy extends PassportStrategy(Strategy, 'jwt') {
         })
     }
 
-    async validate(payload: {sub: number, login: string, role: string}) : Promise<{userId: number, login: string, role: string}>
+    async validate(payload: {sub: number, login: string}) : Promise<JwtTokenDto>
     {   // sub is userId
         console.log('Data we get from reqeust token', payload);
         
-        return {userId: payload.sub, login: payload.login, role: payload.role}
+        return {userId: payload.sub, login: payload.login}
     }
 }
 

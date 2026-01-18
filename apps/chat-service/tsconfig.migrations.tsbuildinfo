@@ -1,0 +1,1 @@
+{"root":["./migrations/main/migrations/1-create-room.ts","./migrations/main/migrations/2-create-message-notification-entity.ts","./migrations/main/schemas/commonSchemas.ts"],"version":"5.9.3"}

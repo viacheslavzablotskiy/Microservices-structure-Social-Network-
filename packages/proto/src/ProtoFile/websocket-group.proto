@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package websocketgroup;
+
+import "google/protobuf/empty.proto";
+
+// Service that send the data had somthing to do with the group in the chat-service
+service WebSocketGroupService {
+    // method that create new message in the group
+    rpc CreateNewMessageGroup(CreateNewMessageGroupData) returns (google.protobuf.Empty);
+    // method that updated message in the group
+    rpc UpdateMessageGroup(UpdateMessageGroupData) returns (google.protobuf.Empty);
+    // method that delete message in group
+    rpc DeleteMessageGroup(DeleteMessageGroupData) returns (google.protobuf.Empty);
+}
+
+// data for the new message entity
+message CreateNewMessageGroupData {
+    string message = 1;
+    int32 author_id = 2;
+    string room_name = 3;
+}
+
+// data for update message
+message UpdateMessageGroupData {
+    string message = 1;
+    int32 author_id = 2;
+    string message_id = 3;
+    string room_name = 4;
+}
+
+// data for delete message
+message DeleteMessageGroupData {
+    string message_id = 1;
+    int32 author_id = 2;
+    string room_name = 3;
+}
+
+
+
+
+
+
+
