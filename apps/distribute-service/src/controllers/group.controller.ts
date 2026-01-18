@@ -5,7 +5,8 @@ import { TimersIntercertor } from "src/settings/main.interceptors";
 import {type Request} from 'express'
 import {CreateNewGroupSwagger, AddNewMemberSwagger, DeleteMemberSwagger} from '../documentation_classes/group.swagger'
 import { NotificationTypeDataForClient, RoomDocument, RoomTypeData, createNewGroupSchema, addNewMemberGroupSchema,
-     deleteMemberGroupSchema, type CreateNewGroupType, type AddNewMemberGroup, type DeleteMmemberGroup } from "@repo/user-interfaces";
+     deleteMemberGroupSchema, type CreateNewGroupType, type AddNewMemberGroup, type DeleteMmemberGroup, 
+     MessageNotificationDTO} from "@repo/user-interfaces";
 import { MainGrudGroupService } from "src/providers/group.service";
 
 @ApiTags('group')
@@ -26,7 +27,7 @@ export class ChatController {
     @Get(':roomId/messages')
     async initialSetMessageOrOtherData(
         @Req() req: Request, @Param('roomId') roomId: string, @Query('after') after: string   // Date
-    ): Promise<void> {
+    ): Promise<MessageNotificationDTO> {
         if (!req.user) throw new UnauthorizedException('you are not authorizate')
         if (!after) {
             return await this.maingroupService.getGroupFirstData({roomId: roomId})

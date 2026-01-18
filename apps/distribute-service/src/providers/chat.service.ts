@@ -1,6 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from "@nestjs/common";
 import { type ClientGrpc } from "@nestjs/microservices";
 import { DistChatService } from "@repo/proto";
+import { mapActionTypeToBack, MessageEntity, MessageEntityProto } from "@repo/user-interfaces";
 import { firstValueFrom } from "rxjs";
 
 
@@ -17,12 +18,25 @@ export class MainChatService implements OnModuleInit {
         this.distChatService = this.client.getService<DistChatService>('DistChatService')    
     }
 
-
-    async getChatFirstMessages(data: {chatId: string}): Promise<void> {
-        const response = await firstValueFrom(this.distChatService.getChatFirstMessages(data))
+    converyMessageProtoToJson(data: MessageEntityProto): MessageEntity[] {
+        return data.messages.map(object => {
+            return {
+                ...object,
+                type: mapActionTypeToBack(object.type),
+                createdAt: new Date(object.createdAt),
+                updatedAt: new Date(object.updatedAt)
+            }
+        })
     }
 
-    async getChatOtherMessages(data: {chatId: string, lastId: string}): Promise<void> {
-        const response = await firstValueFrom(this.distChatService.getChatOtherMessages(data))
-    }
+
+    async getChatFirstMessages(data: {chatId: string}): Promise<MessageEntity[]> {
+        const response: MessageEntityProto = await firstValueFrom(this.distChatService.getChatFirstMessages(data))
+        return this.converyMessageProtoToJson(response)
+    }   
+
+    async getChatOtherMessages(data: {chatId: string, lastId: string}): Promise<MessageEntity[]> {
+        const response: MessageEntityProto = await firstValueFrom(this.distChatService.getChatOtherMessages(data))
+        return this.converyMessageProtoToJson(response)
+     }
 }

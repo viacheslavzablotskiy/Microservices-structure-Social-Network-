@@ -1,3 +1,4 @@
+import { NotificationTypeData } from "./main_notification_interface"
 import { ActionType, ActionTypeProto } from "./message.notification.interface"
 
 export interface MessageEntity {
@@ -23,12 +24,10 @@ export interface RedisPublishData {
 export type MessageGroupEntityAndRedisPublish = Omit<MessageEntity, 'createdAt' | 'updatedAt'> & {createdAt: string, updatedAt: string}
 
 export type MessageEntityProto = {
-    messages: (Omit<MessageEntity, 'createdAt' | 'updatedAt'> & {createdAt: string, updatedAt: string})[]
+    messages: (Omit<MessageEntity, 'createdAt' | 'updatedAt' | 'type'> & {createdAt: string, updatedAt: string, type: ActionTypeProto})[]
 }
 
 export type MessageEntityProtoOne = Omit<MessageEntity, 'createdAt' | 'updatedAt' | 'type'> & {createdAt: string, updatedAt: string, type: ActionTypeProto}
-
-
 
 export type RedisGroupPublish = {
     message: MessageGroupEntityAndRedisPublish,

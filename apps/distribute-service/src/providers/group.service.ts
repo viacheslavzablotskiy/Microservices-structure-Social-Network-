@@ -4,7 +4,7 @@ import {DistChatService} from "@repo/proto"
 import {v4 as uuidv4} from 'uuid'
 import {type CreateNewGroupType, type NewMemberType, type DeleteMemberType} from '@repo/proto'
 import { firstValueFrom } from "rxjs";
-import { mapActionTypeToBack, mapEventTypeProtoToEnum, mapObjectProtoToEnum, NotificationTypeData, NotificationTypeDataForClient, NotificationTypeDataProto, RoomDocument } from "@repo/user-interfaces";
+import { ActionType, ActionTypeProto, mapActionTypeToBack, mapEventTypeProtoToEnum, mapObjectProtoToEnum, MessageEntity, MessageEntityProtoOne, MessageNotificationDTO, MessageNotificationProtoData, NotificationTypeData, NotificationTypeDataForClient, NotificationTypeDataProto, RoomDocument } from "@repo/user-interfaces";
 
 @Injectable()
 export class MainGrudGroupService implements OnModuleInit {
@@ -18,7 +18,7 @@ export class MainGrudGroupService implements OnModuleInit {
         this.distChatService = this.client.getService<DistChatService>('DistChatService')
     }
 
-    async convertNotificationToEnum(data: NotificationTypeDataProto): Promise<NotificationTypeData> {
+    convertNotificationToEnum(data: NotificationTypeDataProto): NotificationTypeDataForClient {
         return {
             ...data,
             type: mapActionTypeToBack(data.type),
@@ -26,18 +26,53 @@ export class MainGrudGroupService implements OnModuleInit {
                 ...data.payload,
                 objectType: mapObjectProtoToEnum(data.payload.objectType)
             },
-            event: mapEventTypeProtoToEnum(data.event)
+            event: mapEventTypeProtoToEnum(data.event),
+            createdAt: new Date(data.createdAt),
+            updatedAt: new Date(data.updatedAt)
         }
     }
 
+    convertMessageToJson(data: MessageEntityProtoOne): MessageEntity {
+        return {
+            ...data,
+            type: mapActionTypeToBack(data.type),
+            createdAt: new Date(data.createdAt),
+            updatedAt: new Date(data.updatedAt)
+        }
+    }
 
-    async getGroupFirstData(data: {roomId: string}): Promise<void> {
-        const response = await firstValueFrom(this.distChatService.getGroupFirstMessages(data))
+    convertMessagesAndNotification(data: MessageNotificationProtoData): MessageNotificationDTO {
+        const body = data.payload.map((object) => {
+            switch (object.type) {
+                case ActionTypeProto.ACTOIN_TYPE_MESSAGE: {
+                    return this.convertMessageToJson(object as MessageEntityProtoOne)
+                }
+                case ActionTypeProto.ACTION_TYPE_NOTIFICATION: {
+                    const body = this.convertNotificationToEnum(object as NotificationTypeDataProto)
+                    return {
+                        ...body,
+                        createdAt: new Date(body.createdAt),
+                        updatedAt: new Date(body.updatedAt)
+                    }
+                }
+                default: {
+                    return this.convertMessageToJson(object as MessageEntityProtoOne)
+                }
+            }
+        })
+        return body
+    } 
+
+
+    async getGroupFirstData(data: {roomId: string}): Promise<MessageNotificationDTO> {
+        const response: MessageNotificationProtoData = await firstValueFrom(this.distChatService.getGroupFirstMessages(data))
+        return this.convertMessagesAndNotification(response)
     }
 
 
-    async getGroupOtherData(data: {roomId: string, lastId: string}) : Promise<void> {
-        const response = await firstValueFrom(this.distChatService.getGroupOtherMessages(data))
+    async getGroupOtherData(data: {roomId: string, lastId: string}) : Promise<MessageNotificationDTO> {
+        const response: MessageNotificationProtoData = await firstValueFrom(this.distChatService.getGroupOtherMessages(data))
+        return this.convertMessagesAndNotification(response)
     }
 
     async createNewGroup(data: Omit<CreateNewGroupType, 'roomId'>): Promise<RoomDocument> {
@@ -54,22 +89,14 @@ export class MainGrudGroupService implements OnModuleInit {
     async addNewMember(data: NewMemberType): Promise<NotificationTypeDataForClient> {
         const response  = await firstValueFrom(this.distChatService.addNewMember(data))
         if (!response) throw new NotAcceptableException('Data does not match waht you should get')
-        const body = await this.convertNotificationToEnum(response)
-        return {
-            ...body,
-            createdAt: new Date(body.createdAt),
-            updatedAt: new Date(body.updatedAt)
-        }
+        const body =  this.convertNotificationToEnum(response)
+        return body
     }
 
     async deleteMember(data: DeleteMemberType): Promise<NotificationTypeDataForClient> {
         const response = await firstValueFrom(this.distChatService.deleteMember(data))
         if (!response) throw new NotAcceptableException('Data does not match what you should get')
-        const body = await this.convertNotificationToEnum(response)
-        return {
-            ...body,
-            createdAt: new Date(body.createdAt),
-            updatedAt: new Date(body.updatedAt)
-        }
+        const body =  this.convertNotificationToEnum(response)
+        return body
     }
 }

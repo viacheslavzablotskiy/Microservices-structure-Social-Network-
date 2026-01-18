@@ -4,6 +4,7 @@ import { JWTAuthGuard } from "@repo/api";
 import { MainChatService } from "src/providers/chat.service";
 import { TimersIntercertor } from "src/settings/main.interceptors";
 import {type Request} from 'express'
+import { MessageEntity } from "@repo/user-interfaces";
 
 @ApiTags('chat')
 @Controller('chats')
@@ -19,7 +20,7 @@ export class MainChatController {
     @UseGuards(JWTAuthGuard)
     @UseInterceptors(TimersIntercertor)
     @Get(':chatId/messages')
-    async getFirstMessagesOrOther(@Req() req: Request, @Param('chatId') chatId: string, @Query('after') after: string): Promise<void> {
+    async getFirstMessagesOrOther(@Req() req: Request, @Param('chatId') chatId: string, @Query('after') after: string): Promise<MessageEntity[]> {
         if (req.user) throw new UnauthorizedException('you are not authorizate')
         if (!after) {
             return await this.mainChatService.getChatFirstMessages({chatId: chatId})

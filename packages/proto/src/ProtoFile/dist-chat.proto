@@ -13,13 +13,13 @@ service DistChatService {
     // method that delete member from group
     rpc DeleteMember(DeleteMemberData) returns (NotificationData);
     // get first times messages and notificaiions for group
-    rpc GetGroupFirstMessages(FristGroupTimeData) returns (google.protobuf.Empty);
+    rpc GetGroupFirstMessages(FristGroupTimeData) returns (MessageOrNotificationProtoData);
     // get other times messages and notificaitons for group
-    rpc GetGroupOtherMessages(OtherGroupTimeData) returns (google.protobuf.Empty);
+    rpc GetGroupOtherMessages(OtherGroupTimeData) returns (MessageOrNotificationProtoData);
     // get fist times messages and notification for chats
-    rpc GetChatFirstMessages(FirstChatTimeData) returns (google.protobuf.Empty);
+    rpc GetChatFirstMessages(FirstChatTimeData) returns (MessagesReturnValue);
     // get other times messages and notification for chats
-    rpc GetChatOtherMessages(OtherChatTimeData) returns (google.protobuf.Empty);
+    rpc GetChatOtherMessages(OtherChatTimeData) returns (MessagesReturnValue);
 }
 
 
@@ -113,4 +113,35 @@ message FirstChatTimeData {
 message OtherChatTimeData {
     string chat_id = 1;
     string last_id = 2;
+}
+
+// message entity proto
+message MessageName {
+    int32 id = 1;
+    int32 room_id = 2;
+    ActionType type = 3;
+    string created_at = 4;
+    string updated_at = 5;
+    int32 sender_id = 6;
+    repeated int32 attachments = 7;
+    string message = 8;
+    bool is_deleted = 9;
+    bool is_edited = 10;
+}
+
+// typing of the union 
+message PayloadItem {
+    oneof payload {
+        MessageName messages = 1;
+        NotificationData notifications = 2;
+    }
+}
+// message or notificaiton data
+message MessageOrNotificationProtoData {
+    repeated PayloadItem payload = 1;
+}
+
+// return value for chats
+message MessagesReturnValue {
+    repeated MessageName messages = 1;
 }

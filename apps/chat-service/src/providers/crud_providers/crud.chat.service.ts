@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import {type FirstChatTimeData, type OtherChatTimeData} from '@repo/proto'
 import { Model } from "mongoose";
 import { MessageGroupDocument, MessageNotificationEntity } from "src/enities/message.notificaiton.entitiy";
-import {ActionType, MessageEntityProto} from '@repo/user-interfaces'
+import {ActionType, mapActionTypeToProto, MessageEntityProto} from '@repo/user-interfaces'
 import { MessageSchema } from "src/enities/message.entity";
 
 @Injectable()
@@ -18,7 +18,7 @@ export class CrudChatService {
                 ...message,
                 _id: message._id.toString(),
                 roomId: message.roomId.toString(),
-                type: message.type,
+                type: mapActionTypeToProto(message.type),
                 attachments: message.attachments,
                 message: message.message,
                 isEdited: message.isEdited,

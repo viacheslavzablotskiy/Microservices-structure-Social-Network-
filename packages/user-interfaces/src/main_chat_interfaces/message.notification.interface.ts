@@ -1,5 +1,5 @@
-import { MessageEntityProtoOne } from "./main_message_interfaces";
-import { NotificationTypeDataProto } from "./main_notification_interface";
+import { MessageEntity, MessageEntityProtoOne } from "./main_message_interfaces";
+import { NotificationTypeDataForClient, NotificationTypeDataProto } from "./main_notification_interface";
 
 export enum ActionType {
     MESSAGE_TYPE='message',
@@ -39,3 +39,5 @@ export interface MessageNotificationTypeData {
 export interface MessageNotificationProtoData {
     payload: (MessageEntityProtoOne | NotificationTypeDataProto)[]
 }
+
+export type MessageNotificationDTO = (MessageEntity | NotificationTypeDataForClient)[]

@@ -5,7 +5,6 @@ import { Message } from "./message.entity"
 import { Notification } from "./notifications.entity"
 
 
-
 @Schema({timestamps: true, discriminatorKey: 'type'})
 export class MessageNotificationEntity {
     @Prop({type: mongoose.Types.ObjectId, ref: 'Room'})
