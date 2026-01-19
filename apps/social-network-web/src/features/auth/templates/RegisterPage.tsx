@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom"
 import { type RegisterSchemaUser } from '@repo/user-interfaces'
 import {useForm, type SubmitHandler} from 'react-hook-form'
-import { useRegisterUserMutation } from "./endpointsAuth/endpoints"
+import { useRegisterUserMutation } from "../endpointsAuth/endpoints";
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import PersonIcon from '@mui/icons-material/Person';

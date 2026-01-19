@@ -1,10 +1,10 @@
 import { type LoginScemaUser } from "@repo/user-interfaces"
 import {useForm, type SubmitHandler} from 'react-hook-form'
 import { Link, useNavigate } from "react-router-dom"
-import { useLoginInUserMutation } from "./endpointsAuth/endpoints"
-import { useAppDispatch } from "../../main-app-settings/main-hooks"
-import { setToken } from "../access-token/AccessToken"
-import { loginInUser } from "./AuthSlice"
+import { useLoginInUserMutation } from "../endpointsAuth/endpoints"
+import { useAppDispatch } from "../../../main-app-settings/main-hooks"
+import { setToken } from "../../access-token/AccessToken"
+import { loginInUser } from "../AuthSlice"
 import './styleForAuth/LoginPage.css'
 import logo from '../../upload_image/logo.png'
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
@@ -20,14 +20,9 @@ export const LoginPage  = () => {
 
     const onSubmit: SubmitHandler<LoginScemaUser> = async (data) => {
         try {
-            console.log('we begin login proccess');
-            
-
             const response = await loginUserData(data).unwrap()
-            
             dispatch(setToken(response.accessToken))
             dispatch(loginInUser(response.response))
-
             navigate('/home')
         } catch (error) {
             console.error('there is error at the LoginPage: ', error)

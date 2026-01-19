@@ -3,11 +3,11 @@ import './App.css'
 import { matchPath, Navigate, Route, Routes, useLocation, Outlet } from 'react-router-dom'
 import { useAppSeletctor } from './main-app-settings/main-hooks'
 import { useState } from 'react'
-import { SideBar } from './features/sideBar/sidebar-com'
-import { LoginPage } from './features/auth/AuthLoginPage'
-import { RegisterPage } from './features/auth/RegisterPage'
-import pathRules from './some-settings/pathUrls'
-import { AuthLayoutSide } from './features/auth/secondBlockRAndLPage'
+import { SideBar } from './features/commonComponents/sidebar-com'
+import { LoginPage } from './features/auth/templates/AuthLoginPage'
+import { RegisterPage } from './features/auth/templates/RegisterPage'
+import pathRules from './main-app-settings/some-settings/pathUrls'
+import { AuthLayoutSide } from './features/auth/templates/secondBlockRAndLPage'
 
 
 export const ProtectedRoutes: React.FC = () => {
@@ -39,7 +39,10 @@ export const LayoutFunction: React.FC = () => {
 
     return <div className={resultPath}>
       {
-       !matchedRules?.hideSideBar ? <SideBar open={open} setOpen={setOpen}/> : <AuthLayoutSide/>
+        (matchedRules?.hideSideBar && /auth\/.*/.test(matchedRules.pattern)) && <AuthLayoutSide/>  
+      }
+      {
+        !matchedRules?.hideSideBar && <SideBar open={open} setOpen={setOpen}/>
       }
       <div className='main-content'><Outlet/></div>
     </div>
@@ -53,7 +56,7 @@ function App() {
           <Route path='auth/login' element={<LoginPage/>}></Route>
           <Route path='auth/register' element={<RegisterPage/>}></Route>
           <Route element={<ProtectedRoutes/>}>
-            <Route></Route>  
+            <Route path='home' element={<LoginPage/>}></Route>  
           </Route>
         </Route>
       </Routes>

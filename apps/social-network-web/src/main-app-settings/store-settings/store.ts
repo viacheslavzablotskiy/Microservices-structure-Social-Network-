@@ -1,8 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import {persistedRedusers } from "./combineReduser";
-import {FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistStore} from 'redux-persist';
+import {FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistStore, type PersistConfig, persistReducer} from 'redux-persist';
 import { apiSlice } from "./endpointsRTX-Query";
+import {type EpicMiddleware, createEpicMiddleware} from 'redux-observable'
+import type { RootActionAuth } from "../../features/auth/AuthSlice";
+import { persistedRedusers, type RootStateRedusers } from "./combineReduser";
 
+const epicMiddleware: EpicMiddleware<RootActionAuth, RootActionAuth, RootStateRedusers> = createEpicMiddleware<RootActionAuth, RootActionAuth, RootStateRedusers>()
 
 export const store = configureStore({
     reducer: persistedRedusers,
@@ -11,9 +14,9 @@ export const store = configureStore({
         serializableCheck: {
             ignoredActions: [FLUSH, REGISTER, REHYDRATE, PAUSE, PERSIST, PURGE]
         }
-    }).concat(apiSlice.middleware)
+    }).concat(apiSlice.middleware).concat(epicMiddleware)
 })
-
+// epicMiddleware.run()
 
 export const persister = persistStore(store)
 

@@ -1,6 +1,5 @@
 import type { LoginScemaUser, RegisterSchemaUser, User_Login_Data } from "@repo/user-interfaces";
-import { apiSlice } from "../../../main-app-settings/endpointsRTX-Query";
-
+import { apiSlice } from "../../../main-app-settings/store-settings/endpointsRTX-Query";
 
 const authApi = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
@@ -18,11 +17,14 @@ const authApi = apiSlice.injectEndpoints({
                 url: 'auth/register',
                 method: 'POST',
                 body: data
-            })
+            }),
         }),
 
         loguotUser: builder.mutation<void, void>({
-            query: () => 'auth/logout'
+            query: () => ({
+                url: 'auth/logout',
+                method: 'POST'
+            }), invalidatesTags: ['Comment', 'Like', 'Message', 'Post', 'User']
         })
     })
 })
