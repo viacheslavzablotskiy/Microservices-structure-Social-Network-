@@ -4,7 +4,7 @@ import { JWTAuthGuard, ZodValidationPipe } from "@repo/api";
 import {CreationCommentSchema, type CreationCommentType, UpdatingCommentSchema,
      type UpdatingCommentType, DeleteCommentSchema, type DeleteCommentType,
      CommentEntity} from '@repo/user-interfaces'
-import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiNoContentResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CommentEntitySwagger, CreatioNcommentSwagger, DeleteCommentSwagger, UpdationCommentSwagger } from "src/documentation_classes/comments.swagger";
 import { UpdationPostSwagger } from "src/documentation_classes/post.swagger";
 import { type Request } from "express";
@@ -21,18 +21,19 @@ export class MainCommentController {
     @UseGuards(JWTAuthGuard)
     @Get(':postId') 
     @ApiOperation({summary: 'get comments', description: 'get protion of the comment'})
-    @ApiQuery({name: 'after', type: String, required: false, description: 'what last id'})
+    @ApiQuery({name: 'lastId', type: String, required: false, description: 'what last id'})
+    @ApiParam({name: 'postId', type: String, required: true, description: 'post ID FOR Comment'})
     @ApiResponse({type: CommentEntitySwagger, isArray: true, description: 'your answer'})
     @UseInterceptors(TimersIntercertor)
     async handleLoadMoreComments(
-        @Query('after') after?: string,
-        @Param('postId') postId?: string,
+        @Param('postId') postId: string,
+        @Query('lastId') lastId?: string
     ) : Promise<CommentEntity[]> {
-        if (!after && !postId) throw new BadRequestException('error, because we dont have initialComments')
-        if (!after) {
+        if (!lastId && !postId) throw new BadRequestException('error, because we dont have initialComments')
+        if (!lastId) {
             return await this.commentService.getInitialCommentData({postId: Number(postId)})
         }
-        return await this.commentService.getOtherPartOfData({lastId: Number(after), postId: Number(postId)})    
+        return await this.commentService.getOtherPartOfData({lastId: Number(lastId), postId: Number(postId)})    
     } 
 
     @ApiBearerAuth('auth-part')

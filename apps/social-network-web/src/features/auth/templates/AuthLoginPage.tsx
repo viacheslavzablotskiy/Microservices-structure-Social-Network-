@@ -1,7 +1,7 @@
 import { type LoginScemaUser } from "@repo/user-interfaces"
 import {useForm, type SubmitHandler} from 'react-hook-form'
 import { Link, useNavigate } from "react-router-dom"
-import { useLoginInUserMutation } from "../endpointsAuth/endpoints"
+import { useLoginInUserMutation } from "../../../main-app-settings/endpoints/auth.endpoints"
 import { useAppDispatch } from "../../../main-app-settings/main-hooks"
 import { setToken } from "../../access-token/AccessToken"
 import { loginInUser } from "../AuthSlice"

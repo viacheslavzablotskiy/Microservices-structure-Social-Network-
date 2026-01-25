@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
-import {FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistStore, type PersistConfig, persistReducer} from 'redux-persist';
-import { apiSlice } from "./endpointsRTX-Query";
+import {FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistStore} from 'redux-persist';
+import { apiSlice } from "../endpoints/endpointsRTX-Query";
 import {type EpicMiddleware, createEpicMiddleware} from 'redux-observable'
 import type { RootActionAuth } from "../../features/auth/AuthSlice";
 import { persistedRedusers, type RootStateRedusers } from "./combineReduser";

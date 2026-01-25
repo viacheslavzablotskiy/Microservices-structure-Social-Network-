@@ -1,5 +1,5 @@
 import type { LoginScemaUser, RegisterSchemaUser, User_Login_Data } from "@repo/user-interfaces";
-import { apiSlice } from "../../../main-app-settings/store-settings/endpointsRTX-Query";
+import { apiSlice } from "./endpointsRTX-Query";
 
 const authApi = apiSlice.injectEndpoints({
     endpoints: (builder) => ({

@@ -3,7 +3,7 @@ import AuthRedusers from '../../features/auth/AuthSlice'
 import {persistReducer, type PersistConfig} from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import TokenReduser from '../../features/access-token/AccessToken'
-import { apiSlice } from "./endpointsRTX-Query";
+import { apiSlice } from "../endpoints/endpointsRTX-Query";
 
 export const combineAllRedusers =  combineReducers({
     auth: AuthRedusers,

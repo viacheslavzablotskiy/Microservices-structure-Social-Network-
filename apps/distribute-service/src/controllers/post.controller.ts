@@ -8,7 +8,7 @@ import { ApiBody, ApiCreatedResponse, ApiNoContentResponse, ApiNotAcceptableResp
 import { CretionNewPostSwagger, DeletePostSwagger, Post_Entity_Swagger, UpdationPostSwagger } from "src/documentation_classes/post.swagger";
 import { type Request } from "express";
 import { TimersIntercertor } from "src/settings/main.interceptors";
-
+import {RetrunPostEntity} from '@repo/user-interfaces'
 @ApiTags('post')
 @Controller('post')
 export class MainPostCOntriller {
@@ -26,7 +26,7 @@ export class MainPostCOntriller {
     async getInitialOrSomeData(
         @Req() req: Request,
         @Query('after') after?: string
-    ) {
+    ): Promise<RetrunPostEntity[]> {
         if (!req.user) throw new UnauthorizedException('YOU DONT HAVE PERMISSION')
 
         if (!after) {
@@ -40,7 +40,7 @@ export class MainPostCOntriller {
     @ApiCookieAuth()
     @ApiBearerAuth('auth-part')
     @UseGuards(JWTAuthGuard)
-    @Post('create')
+    @Post('createnewPost')
     @ApiOperation({summary: 'creation new Post', description: 'crate new post'})
     @ApiBody({type: CretionNewPostSwagger})
     @ApiResponse({status: 201, description: 'creation new post successfully'})
@@ -66,17 +66,12 @@ export class MainPostCOntriller {
         @Body(new ZodValidationPipe(UpdatetingPostDataSchema)) dto: UpdatePostDataType
     ): Promise<Post_Entity> {
         if (!req.user) throw new UnauthorizedException('you dont have token (post)')
-
-        console.log(dto);
-        
-
         return await this.postService.updatePost({...dto, id: Number(id), userId: req.user.userId})
     }
 
     @ApiCookieAuth()
     @ApiBearerAuth('auth-part')
     @UseGuards(JWTAuthGuard)
-    // @Post('delete') ////there need RABBITMQ
     @Delete(":id")
     @ApiOperation({summary: 'delete', description: 'deleted post'})
     @ApiNoContentResponse({description: 'your post delete successfully'})
