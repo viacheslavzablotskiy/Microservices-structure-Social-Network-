@@ -1,25 +1,27 @@
 import { apiSlice } from "./endpointsRTX-Query";
-import {type CreationLikeType} from '@repo/user-interfaces'
+import { postEndpoints } from "./post.enpoints";
 
 
 
-const likeEndpoints = apiSlice.injectEndpoints({
+export const likeEndpoints = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        createLike: builder.mutation<void, CreationLikeType>({
-            query: (data) => {
-                return {
-                    url: 'like/create',
-                    method: 'POST',
-                    body: data
-                }
-            }
-        }),
-
-        deleteLike: builder.mutation<void, {postId: string}>({
-            query: (data) => {
-                return {
-                    url: `like/${data.postId}`,
-                    method: 'DELETE'
+        toggleLike: builder.mutation<void, {postId: string, isLiked: boolean}>({
+            query: ({postId, isLiked}) => ({
+                url: `like/${postId}`,
+                method: isLiked ? 'DELETE' : 'POST'
+            }),
+            async onQueryStarted({postId, isLiked}, {dispatch, queryFulfilled}) {
+                const result = dispatch(postEndpoints.util.updateQueryData('getPosts', {}, (draft) => {
+                    const currentPost = draft.find(post => post.id === Number(postId))
+                    if (currentPost) {
+                        currentPost.isLiked = !currentPost.isLiked,
+                        currentPost.likeCount += currentPost.isLiked ? 1 : -1
+                    }
+                }))
+                try {
+                    await queryFulfilled
+                } catch {
+                    result.undo()
                 }
             }
         })
@@ -27,4 +29,4 @@ const likeEndpoints = apiSlice.injectEndpoints({
 })
 
 
-export const {useCreateLikeMutation, useDeleteLikeMutation} = likeEndpoints
+export const {useToggleLikeMutation} = likeEndpoints

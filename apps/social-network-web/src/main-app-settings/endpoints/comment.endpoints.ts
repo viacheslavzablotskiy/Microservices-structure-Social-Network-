@@ -4,7 +4,7 @@ import { apiSlice } from "./endpointsRTX-Query";
 
 
 
-const commentEndpoints =  apiSlice.injectEndpoints({
+export const commentEndpoints =  apiSlice.injectEndpoints({
     endpoints: (buidler) => ({
         getComments: buidler.query<CommentEntity[], {postId: string, lastId: string}>({
             query: data => {

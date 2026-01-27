@@ -3,9 +3,9 @@ import { apiSlice } from "./endpointsRTX-Query";
 
 
 
-const postEndpoints = apiSlice.injectEndpoints({
+export const postEndpoints = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        getPosts: builder.query<Post_Entity[], {lastId?: string}>({
+        getPosts: builder.query<RetrunPostEntity[], {lastId?: string}>({
             query: ({lastId}) => {
                 const query = new URLSearchParams()
                 if (lastId) query.append('lastId', lastId)
@@ -13,7 +13,7 @@ const postEndpoints = apiSlice.injectEndpoints({
             }, 
         }),
 
-        createPost: builder.mutation<RetrunPostEntity[], CreationPostDataType>({
+        createPost: builder.mutation<RetrunPostEntity, CreationPostDataType>({
             query: (data) => {
                 return {
                     url: 'post/createNewPost', 
@@ -23,7 +23,7 @@ const postEndpoints = apiSlice.injectEndpoints({
             }
         }),
 
-        updatePost: builder.mutation<Post_Entity, {data: UpdatePostDataType, postId: string}>({
+        updatePost: builder.mutation<RetrunPostEntity, {data: UpdatePostDataType, postId: string}>({
             query: (post) => {
                 return {
                     url: `post/${post.postId}`,

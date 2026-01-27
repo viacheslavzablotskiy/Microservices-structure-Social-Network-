@@ -2,10 +2,9 @@ import { configureStore } from "@reduxjs/toolkit";
 import {FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistStore} from 'redux-persist';
 import { apiSlice } from "../endpoints/endpointsRTX-Query";
 import {type EpicMiddleware, createEpicMiddleware} from 'redux-observable'
-import type { RootActionAuth } from "../../features/auth/AuthSlice";
-import { persistedRedusers, type RootStateRedusers } from "./combineReduser";
+import { persistedRedusers, type RootActionStore, type RootStateRedusers } from "./combineReduser";
 
-const epicMiddleware: EpicMiddleware<RootActionAuth, RootActionAuth, RootStateRedusers> = createEpicMiddleware<RootActionAuth, RootActionAuth, RootStateRedusers>()
+const epicMiddleware: EpicMiddleware<RootActionStore, RootActionStore, RootStateRedusers> = createEpicMiddleware<RootActionStore, RootActionStore, RootStateRedusers>()
 
 export const store = configureStore({
     reducer: persistedRedusers,

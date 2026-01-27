@@ -1,5 +1,5 @@
 import { combineReducers } from "@reduxjs/toolkit";
-import AuthRedusers from '../../features/auth/AuthSlice'
+import AuthRedusers, { type RootActionAuth } from '../../features/auth/auth.slice'
 import {persistReducer, type PersistConfig} from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import TokenReduser from '../../features/access-token/AccessToken'

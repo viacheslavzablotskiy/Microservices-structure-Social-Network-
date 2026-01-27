@@ -1,7 +1,7 @@
 import type { LoginScemaUser, RegisterSchemaUser, User_Login_Data } from "@repo/user-interfaces";
 import { apiSlice } from "./endpointsRTX-Query";
 
-const authApi = apiSlice.injectEndpoints({
+export const authApi = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         
         loginInUser: builder.mutation<User_Login_Data , LoginScemaUser>({

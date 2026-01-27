@@ -31,7 +31,7 @@ export interface CretionNewPost {
 
 
 export interface RetrunPostEntity extends Post_Entity {
-    countComent: number,
-    likeCOunt: number,
+    commentCount: number,
+    likeCount: number,
     isLiked: boolean
 }

@@ -2,7 +2,7 @@ import { Controller, Post, Body, UseGuards, Delete, Param, Req, UnauthorizedExce
 import {LikeMainService} from '../providers/like.service'
 import {CreationLikeSchema, type CreationLikeType, DeleteLikeSchema, type DeleteLikeType} from '@repo/user-interfaces'
 import { JWTAuthGuard, ZodValidationPipe } from "@repo/api";
-import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiNoContentResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CreationLikeDtoSwagger, DeleteDtoSwagger } from "src/documentation_classes/like.swagger";
 import {type Request } from "express";
 @ApiTags('likes')
@@ -14,17 +14,15 @@ export class MainLikeController {
     @ApiBearerAuth('auth-part')
     @ApiCookieAuth()
     @UseGuards(JWTAuthGuard)
-    @Post('create')
+    @Post(':postId')
     @ApiOperation({summary: 'add like', description: 'creation new like'})
-    @ApiBody({type: CreationLikeDtoSwagger})
+    @ApiParam({type: String, name: 'postId', required: true, description: 'post id who you add like to'})
     @ApiNoContentResponse({description: 'you create like successfully'})
     async handleCreationNewLike(
-        @Req() req: Request,
-        @Body(new ZodValidationPipe(CreationLikeSchema)) dto: CreationLikeType
+        @Req() req: Request, @Param('postId') postId: string
     ): Promise<void> {
         if (!req.user) throw new UnauthorizedException('you dont have accessToken') 
-
-        await this.likeMainService.creationNewLike({userId: req.user?.userId, postId: dto.postId})
+        await this.likeMainService.creationNewLike({userId: req.user?.userId, postId: Number(postId)})
     }
     
     @ApiBearerAuth('auth-part')
@@ -37,7 +35,6 @@ export class MainLikeController {
         @Param('postId') postId: string, @Req() req: Request
     ) : Promise<void> {
         if (!req.user) throw new UnauthorizedException('you dont have accessToken')
-
         await this.likeMainService.deletingLikes({postId: Number(postId), userId: req.user.userId})
     }
 }

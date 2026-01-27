@@ -15,6 +15,10 @@ export const apiSlice = createApi({
         credentials: 'include',
     }
     ),
+    keepUnusedDataFor: 300,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMountOrArgChange: false,
     tagTypes: ['User', 'Post', 'Comment', 'Like', 'Message'],
     endpoints: () => ({})
 })

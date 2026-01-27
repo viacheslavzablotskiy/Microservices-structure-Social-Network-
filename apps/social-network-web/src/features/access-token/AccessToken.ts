@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import type { RootStateStore } from "../../main-app-settings/store-settings/store"
 
 
 
@@ -36,3 +37,5 @@ export default AccessTokenSlice.reducer
 export const {setToken, deleteToken} = AccessTokenSlice.actions
 
 export type RootActionToken = ReturnType<typeof AccessTokenSlice.actions[keyof typeof AccessTokenSlice.actions]>
+
+export const tokenSelector = (state: RootStateStore) => state.token.currentValue?.accessToken

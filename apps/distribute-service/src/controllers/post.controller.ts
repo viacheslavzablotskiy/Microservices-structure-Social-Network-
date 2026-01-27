@@ -47,7 +47,7 @@ export class MainPostCOntriller {
     async handleCreateNewPost(
         @Req() req: Request,
         @Body(new ZodValidationPipe(CreationPostDataSchema)) dto: CreationPostDataType
-    ) : Promise<Post_Entity> {
+    ) : Promise<RetrunPostEntity> {
         if (!req.user) throw new UnauthorizedException('you dont have the token')
             
         return await this.postService.creationNewPost({...dto, userId: req.user.userId})

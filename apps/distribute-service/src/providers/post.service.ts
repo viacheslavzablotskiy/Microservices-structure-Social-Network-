@@ -39,8 +39,8 @@ export class MainPostService implements OnModuleInit{
                     ...post,
                     createdAt: convertTimeStampToDate(post.createdAt),
                     updatedAt: convertTimeStampToDate(post.updatedAt),
-                    likeCOunt: likes[post.id].like,
-                    countComent: comments[post.id],
+                    likeCount: likes[post.id].like,
+                    commentCount: comments[post.id],
                     isLiked: likes[post.id].isLiked
                 }
             }) 
@@ -67,9 +67,9 @@ export class MainPostService implements OnModuleInit{
                     ...post,
                     createdAt: convertTimeStampToDate(post.createdAt),
                     updatedAt: convertTimeStampToDate(post.updatedAt),
-                    likeCOunt: likes[post.id].like,
+                    likeCount: likes[post.id].like,
                     isLiked: likes[post.id].isLiked,
-                    countComent: comments[post.id]
+                    commentCount: comments[post.id]
                 }
             })
         } catch (error) {
@@ -79,7 +79,7 @@ export class MainPostService implements OnModuleInit{
         }
     }
 
-    async creationNewPost(data: Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>) : Promise<Post_Entity> {
+    async creationNewPost(data: Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>) : Promise<RetrunPostEntity> {
         const response = await firstValueFrom(this.distPostService.createNewPost(data)).catch((error) => {
             throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
                 cause: error
@@ -87,6 +87,9 @@ export class MainPostService implements OnModuleInit{
         })
         return {
             ...response,
+            commentCount: 0,
+            likeCount: 0,
+            isLiked: false,
             createdAt: convertTimeStampToDate(response.createdAt),
             updatedAt: convertTimeStampToDate(response.updatedAt)
         }
