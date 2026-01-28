@@ -1,7 +1,5 @@
-import React from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { postEndpoints, useGetPostsQuery, useLazyGetPostsQuery } from "../../../main-app-settings/endpoints/post.enpoints"
-import { useAppDispatch, useAppSeletctor } from "../../../main-app-settings/some-settings/main-hooks"
-import { tokenSelector } from "../../access-token/AccessToken"
 import type { RetrunPostEntity } from "@repo/user-interfaces"
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -9,12 +7,39 @@ import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutline
 import { useToggleLikeMutation} from "../../../main-app-settings/endpoints/like.endpoints"
 
 export const PostsPage = () => {
-    const dispatch = useAppDispatch()
-    const accessToken = useAppSeletctor(tokenSelector)
-    const { data: posts } = useGetPostsQuery({})
-    const [fetchMore, { data: morePosts }] = useLazyGetPostsQuery()
-
+    const { data: posts = []} = useGetPostsQuery({})
+    const [fetchMore] = useLazyGetPostsQuery()
+    const currentRef = useRef<HTMLDivElement | null>(null)
+    const [hasMore, setHasMore] = useState(true)
     if (!posts) {return <p>There is not posts yet</p>}
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(async (entries) => {
+            const tagretElement = entries[0]
+            if (tagretElement.isIntersecting && hasMore) {
+                const lastId = posts[posts.length - 1]?.id
+                const {data} = await fetchMore({lastId: String(lastId)})
+                if (data && data.length > 0) {
+                    postEndpoints.util.updateQueryData('getPosts', {}, (draft) => {
+                        draft.push(...data)
+                    })
+                } else {
+                    setHasMore(false)
+                    if (currentRef.current) observer.unobserve(currentRef.current)
+                }
+            }
+        })
+        
+        if (currentRef.current) {
+            observer.observe(currentRef.current)
+        }
+
+        return () => {
+            if (currentRef.current) {
+                observer.unobserve(currentRef.current)
+            }
+        }
+    }, [posts, fetchMore, hasMore])
     return posts.map((post) => 
         { return <PostById key={post.id} postId={post.id}/>
     })

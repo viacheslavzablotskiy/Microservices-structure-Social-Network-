@@ -1,4 +1,4 @@
-import type { CreationPostDataType, Post_Entity, RetrunPostEntity, UpdatePostDataType } from "@repo/user-interfaces";
+import type { CreationPostDataType, RetrunPostEntity, UpdatePostDataType } from "@repo/user-interfaces";
 import { apiSlice } from "./endpointsRTX-Query";
 
 
