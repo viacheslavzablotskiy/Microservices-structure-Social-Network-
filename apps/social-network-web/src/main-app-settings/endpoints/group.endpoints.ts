@@ -20,7 +20,7 @@ export const groupEndpoints = apiSlice.injectEndpoints({
                 return {
                     url: 'group/createNewGroup',
                     method: 'POST',
-                    data: data
+                    body: data 
                 }
             }
         }),

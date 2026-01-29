@@ -11,12 +11,16 @@ export const PostsPage = () => {
     const [fetchMore] = useLazyGetPostsQuery()
     const currentRef = useRef<HTMLDivElement | null>(null)
     const [hasMore, setHasMore] = useState(true)
-    if (!posts) {return <p>There is not posts yet</p>}
+    const hasMoreRef = useRef<boolean>(hasMore)
+
+    useEffect(() => {
+        hasMoreRef.current = hasMore
+    }, [hasMore])
 
     useEffect(() => {
         const observer = new IntersectionObserver(async (entries) => {
-            const tagretElement = entries[0]
-            if (tagretElement.isIntersecting && hasMore) {
+            const targetElement = entries[0]
+            if (targetElement.isIntersecting && hasMoreRef.current) {
                 const lastId = posts[posts.length - 1]?.id
                 const {data} = await fetchMore({lastId: String(lastId)})
                 if (data && data.length > 0) {
@@ -39,10 +43,11 @@ export const PostsPage = () => {
                 observer.unobserve(currentRef.current)
             }
         }
-    }, [posts, fetchMore, hasMore])
-    return posts.map((post) => 
-        { return <PostById key={post.id} postId={post.id}/>
-    })
+    }, [fetchMore])
+    return <>
+    {posts.map((post) => { return <PostById key={post.id} postId={post.id}/>})}
+    {hasMore && <div ref={currentRef} style={{height: '1px'}}></div>}
+    </>
 }
 
 export const PostById: React.FC<{postId: number}> = ({ postId }) => {

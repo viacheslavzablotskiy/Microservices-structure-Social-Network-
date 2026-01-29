@@ -2,7 +2,7 @@ import { fetchBaseQuery } from "@reduxjs/toolkit/query";
 import { type RootStateStore } from "../../store-settings/store";
 import { setToken, type MainValue } from "../../../features/access-token/AccessToken";
 import { logoutUser } from "../../../features/auth/auth.slice";
-
+import { type FetchArgs, type BaseQueryApi } from "@reduxjs/toolkit/query";
 
 
 export const rawBaseQuery = fetchBaseQuery({baseUrl: 'http://localhost:3005/',
@@ -17,7 +17,7 @@ export const rawBaseQuery = fetchBaseQuery({baseUrl: 'http://localhost:3005/',
     }
 )
 
-export const baseQueryWithReAuth = async (args: any, api: any, extraOptions: any) => {
+export const baseQueryWithReAuth = async (args: string | FetchArgs, api: BaseQueryApi, extraOptions: {}) => {
     let result = await rawBaseQuery(args, api, extraOptions)
 
     if (result.error && result.error.status === 401) {

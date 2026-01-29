@@ -39,7 +39,7 @@ export class ImageController {
             }
         }
     })
-    @Post('uplaod_image')
+    @Post('uplaodImage')
     @UseInterceptors(FileInterceptor('image'), TimersIntercertor)
     async loadingImage( @UploadedFile(new ImageMimeTypePipe()) file: Express.Multer.File,
     @Body('key') key?: string): Promise<{key: string}> {
@@ -58,25 +58,3 @@ export class ImageController {
         return this.imageLoager.getImageUrl(key)
     }
 }
-
-// if we want to work namely with the disk on my computer
-    // @UseInterceptors(FileInterceptor('image'
-    //     , { storage: diskStorage({
-    //         destination: async (req, file, cb) => {
-    //             const uploadFile = join(process.cwd(),'upload')
-    //             console.log(join(process.cwd(), 'upload'));
-                
-    //             try {
-    //                 await promises.mkdir(uploadFile, {recursive: true})
-    //                 cb(null, uploadFile)
-    //             } catch (error) {
-    //                cb(error, uploadFile) 
-    //             }
-    //         },
-    //         filename: (req, file, cb) => {
-    //             const filename = Date.now() + '-' + file.originalname
-    //             cb(null, filename)
-    //     }})
-
-    //     }
-    // ))
