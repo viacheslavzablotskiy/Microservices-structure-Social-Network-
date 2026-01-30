@@ -71,6 +71,15 @@ import { MainGrudGroupService } from './providers/group.service';
           protoPath: require.resolve('@repo/proto/dist-chat.proto'),
           url: '0.0.0.0:5012'
         }
+      },
+      {
+        name: 'DIST-USER-PATH',
+        transport: Transport.GRPC,
+        options: {
+          package: 'distuser',
+          protoPath: require.resolve('@repo/proto/dist-user.proto'),
+          url: '0.0.0.0:5020'
+        }
       }
     ]),
     JwtModule.registerAsync({

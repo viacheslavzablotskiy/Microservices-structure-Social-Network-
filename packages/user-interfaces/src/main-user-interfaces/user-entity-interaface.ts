@@ -91,3 +91,5 @@ export interface User_Login_Data {
         refreshToken: string
     }
 }
+
+export type BatchUser = Record<string, {id: number, avatarUrl: string, login: string, expiredAt: Date}>

@@ -6,10 +6,10 @@ import { apiSlice } from "./endpointsRTX-Query";
 
 export const commentEndpoints =  apiSlice.injectEndpoints({
     endpoints: (buidler) => ({
-        getComments: buidler.query<CommentEntity[], {postId: string, lastId: string}>({
+        getComments: buidler.query<CommentEntity[], {postId: string, lastId?: string}>({
             query: data => {
                 const query = new URLSearchParams()
-                query.append('lastId', data.lastId)
+                if (data.lastId) query.append('lastId', data.lastId)
                 return `comments/${data.postId}?${query.toString()}`
             }
         }),

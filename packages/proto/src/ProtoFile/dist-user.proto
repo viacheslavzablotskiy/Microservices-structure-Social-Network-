@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package distuser;
+
+// service that help get the intitial data for the post or another things
+service DistUserService {
+    // method that return the main information for the post and comment
+    rpc GetBatchData(BatchDataInput) returns (ReturnBatchData);
+}
+
+// data to get batch data for post and the comment
+message BatchDataInput {
+    repeated int32 user_ids = 1;
+}
+
+// data for the Record<string, {id: number, avatarKey: string, login: string}>
+message BatchData {
+    int32 id = 1;
+    string avatar_key = 2;
+    string login = 3;
+}
+
+// return data fro msuer to the dist service 
+message ReturnBatchData {
+    map<int32, BatchData> data = 1;
+}
+

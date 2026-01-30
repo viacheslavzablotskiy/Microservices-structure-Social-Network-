@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { UserEntity, UserRole } from 'src/entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
-import {type RegisterSchemaUser, type LoginScemaUser} from '@repo/user-interfaces'
+import { DataSource, In, Repository } from 'typeorm';
+import {type RegisterSchemaUser, type LoginScemaUser, BatchUser} from '@repo/user-interfaces'
 import { UserSecurityEntity } from 'src/entities/user.security.entity';
 import { User_Entity_After_Proto_UserId, entityToProto, User_Entity_After_Proto_UserEmail, convertDateToTimeStamp, convertTimeStampToDate} from '@repo/proto';
 import { CacheService } from '@repo/chache-package';
@@ -48,6 +48,16 @@ export class UserService {
     })
   }
 
+
+  async handleLoadOfTheBunchUser(userIds: number[]): Promise<BatchUser> {
+    const userId =  await this.repository.find({
+      where: {id: In(userIds)}, select: ['id', 'avatarUrl', 'login']
+    })
+    return userId.reduce((acc, user) => {
+        acc[user.id] = {id: user.id, avatarKey: user.avatarUrl, login: user.login}
+        return acc
+    }, {})
+  }
 
   async handleLoginExistingUser(email: string): Promise<User_Entity_After_Proto_UserEmail> {
     const cacheKey = `email:${email}`

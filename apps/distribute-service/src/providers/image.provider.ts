@@ -1,16 +1,22 @@
-import { HttpException, HttpStatus, Injectable, NotAcceptableException, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable, NotAcceptableException, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import {CacheService} from '@repo/chache-package'
 import {ConfigService} from '@nestjs/config'
 import {S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand} from '@aws-sdk/client-s3'
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner'
+import { type ClientGrpc } from "@nestjs/microservices";
+import { BatchDataPorto, type DistUserService } from "@repo/proto";
+import { BatchUser } from "@repo/user-interfaces";
+import { firstValueFrom } from "rxjs";
 
 @Injectable()
 export class ImageLoader implements OnModuleInit{
     private s3Client: S3Client
+    private distUserService: DistUserService
 
     constructor(
         private readonly cacheService: CacheService,
-        private readonly configSerivce: ConfigService
+        private readonly configSerivce: ConfigService,
+        @Inject('DIST-USER-PATH') private readonly client: ClientGrpc
     ) {}
 
     onModuleInit() {
@@ -21,6 +27,8 @@ export class ImageLoader implements OnModuleInit{
                 secretAccessKey: this.configSerivce.get<string>('AWS_SECRET_ACCESS_KEY') || ''
             }
         })
+
+        this.distUserService = this.client.getService<DistUserService>('DistUserService')
     }
 
     // create new object with the new key or updated already created object with existing key
@@ -43,6 +51,27 @@ export class ImageLoader implements OnModuleInit{
         return {key: objectKey}
     }
 
+    async deleteImage(key: string): Promise<{deleted: boolean}> {
+    const bucketName = this.configSerivce.get<string>('BUCKET_NAME') || ''
+    if (!bucketName) throw new NotAcceptableException('there is not bucket with that name')
+
+    try {
+        await this.s3Client.send(new HeadObjectCommand({Key: key, Bucket: bucketName}))
+    } catch (error) {
+        if (error.name === 'Not Found' || error.$metadata?.HttpStatus === 404) {
+            throw new NotAcceptableException(`Object with this key: ${key} does not exists`)
+        }
+        throw new Error(error)
+    }
+
+    await this.s3Client.send(new DeleteObjectCommand({Key: key, Bucket: bucketName}))
+
+    await this.cacheService.del(key)
+
+    return {deleted: true}
+    }
+
+
     async getImageUrl(key: string): Promise<{path: string}> {
         const bucketName = this.configSerivce.get<string>('BUCKET_NAME') || ''
         if (!bucketName) throw new HttpException('Invalid bucket name', HttpStatus.NOT_ACCEPTABLE)
@@ -59,26 +88,32 @@ export class ImageLoader implements OnModuleInit{
         return {path: signedUrl}
     }
 
-    async deleteImage(key: string): Promise<{deleted: boolean}> {
-        const bucketName = this.configSerivce.get<string>('BUCKET_NAME') || ''
-        if (!bucketName) throw new NotAcceptableException('there is not bucket with that name')
+    async getBatchDataUser(data: {userIds: number[]}): Promise<BatchUser> {
+        const ttl = 42 * 60 * 1000
+        const now = Date.now()
+        const batchUserData: BatchDataPorto =  await firstValueFrom(this.distUserService.getBatchData(data.userIds))
 
-        try {
-            await this.s3Client.send(new HeadObjectCommand({Key: key, Bucket: bucketName}))
-        } catch (error) {
-            if (error.name === 'Not Found' || error.$metadata?.HttpStatus === 404) {
-                throw new NotAcceptableException(`Object with this key: ${key} does not exists`)
-            }
-            throw new Error(error)
-        }
 
-        await this.s3Client.send(new DeleteObjectCommand({Key: key, Bucket: bucketName}))
+        const entries: [string, BatchUser[string]][] = await Promise.all(
+            Object.entries(batchUserData).map(async ([key, value]): Promise<[string, BatchUser[string]]> => {
+                const imageUrl = await this.getImageUrl(value.avatarKey)
+                const result: [string, BatchUser[string]] = [
+                    key, {
+                        id: value.id,
+                        avatarUrl: imageUrl.path,
+                        login: value.login,
+                        expiredAt: new Date(now + ttl)  
+                    } 
+                ]
+                return result
+            })
+        )
 
-        await this.cacheService.del(key)
 
-        return {deleted: true}
+        const result: BatchUser = Object.fromEntries(entries)
+        return result
     }
-
+ 
     // async getImageBuffer(key: string): Promise<{image: Buffer}> {
     //     const bucketName = this.configSerivce.get<string>('BUCKET_NAME') || '' 
     //     const response = await this.s3Client.send(new GetObjectCommand({Key: key, Bucket: bucketName}))

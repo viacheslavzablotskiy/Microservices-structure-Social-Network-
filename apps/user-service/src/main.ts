@@ -15,6 +15,15 @@ async function bootstrap() {
     }
   })
 
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+        package: 'distuser',
+        protoPath: require.resolve('@repo/proto/user.proto'),
+        url: '0.0.0.0:5020'
+    }
+  })
+
   const configeService = app.get(ConfigService)
   const port = configeService.get<number>('PORT', 3000)
 

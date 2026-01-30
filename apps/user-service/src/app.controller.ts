@@ -1,7 +1,7 @@
 import {Controller, UseFilters} from '@nestjs/common';
 import { UserService } from './providers/app.service';
 import {type RegisterSchemaUser} from '@repo/user-interfaces'
-import {User_Entity_After_Proto_UserEmail, User_Entity_After_Proto_UserId} from '@repo/proto'
+import {BatchDataPorto, User_Entity_After_Proto_UserEmail, User_Entity_After_Proto_UserId} from '@repo/proto'
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import  {type ServerUnaryCall, type Metadata} from '@grpc/grpc-js'
 import { Empty} from 'google-protobuf/google/protobuf/empty_pb'
@@ -58,4 +58,11 @@ export class AppController {
       } else throw new Error(error)
     }
   }
+
+  @GrpcMethod('DistUserService', 'GetBatchData')
+  @UseFilters(new RpcExceptionFilter())
+  async getBatchData(data: number[]): Promise<BatchDataPorto> {
+    return this.userService.handleLoadOfTheBunchUser(data)
+  }
+
 }
