@@ -15,9 +15,8 @@ message BatchDataInput {
 
 // data for the Record<string, {id: number, avatarKey: string, login: string}>
 message BatchData {
-    int32 id = 1;
-    string avatar_key = 2;
-    string login = 3;
+    string avatar_url = 1;
+    string login = 2;
 }
 
 // return data fro msuer to the dist service 

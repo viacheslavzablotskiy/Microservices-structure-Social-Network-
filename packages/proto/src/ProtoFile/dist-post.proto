@@ -28,6 +28,13 @@ message PostProto {
     string content = 5;
     google.protobuf.Timestamp created_at = 8;
     google.protobuf.Timestamp updated_at = 9;
+    UserDataProto user_data = 10;
+}
+
+// nested data for User
+message UserDataProto {
+    string login = 1;
+    string avatar_url = 2;
 }
 // midst of the data
 message InitialPosts {

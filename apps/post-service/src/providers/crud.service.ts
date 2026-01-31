@@ -9,7 +9,9 @@ import {ConnectionService} from '@repo/rabbitmq-package'
 import * as amqp from 'amqplib'
 import { ConfigService } from "@nestjs/config";
 import { CacheService } from "@repo/chache-package";
-import { RpcException } from "@nestjs/microservices";
+import { type ClientGrpc, RpcException } from "@nestjs/microservices";
+import { DistUserService } from "@repo/proto";
+import { firstValueFrom } from "rxjs";
 
 
 const ROUTING_KEY = {
@@ -39,6 +41,7 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
     private channel: amqp.ConfirmChannel
     private exchangeName: string
     private cacheKeyPostPage: string
+    private distUserSerivce: DistUserService
     
     private routingKeys: Record<keyof typeof ROUTING_KEY, string>
 
@@ -47,7 +50,8 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
         private readonly repositoryPost: Repository<PostEntity>,
         private readonly configService: ConfigService,
         private readonly connectionService: ConnectionService,
-        private readonly cacheServie: CacheService
+        private readonly cacheServie: CacheService,
+        @Inject('DIST-USER-PATH') private readonly client: ClientGrpc
     ) {}
 
 
@@ -78,6 +82,8 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
             console.error('Missing values:', missing.map(([values]) => values).join(' '));
             throw new Error('Invalidate configuration for initilization')
         }
+
+        this.distUserSerivce = this.client.getService<DistUserService>('DistUserService')
     }
 
     private async safePublish<K extends keyof PayloadMap>(routingKey: K, payload: Payload<K>) {
@@ -103,8 +109,8 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
             const response = await this.repositoryPost.save(creationData)
 
             await this.safePublish('POST_PAGE_CACHE', '')
-
-            return convertFromPostToProto(response)
+            const userData = await firstValueFrom(this.distUserSerivce.getBatchData([data.userId]))
+            return {...(convertFromPostToProto(response)), userData: userData[data.userId]}
         } catch (error) {
             console.error(error);
             if (error.code === '203505') {
@@ -128,8 +134,8 @@ export class CrudService implements OnModuleInit, OnModuleDestroy{
         }
 
         const result = await this.repositoryPost.save(post)
-
-        return  convertFromPostToProto(result)
+        const userData = await firstValueFrom(this.distUserSerivce.getBatchData([data.userId]))
+        return  {...(convertFromPostToProto(result)), userData: userData[data.userId]}
     }
 
     async deletePost(data: {id: number, userId: number}): Promise<Empty> {

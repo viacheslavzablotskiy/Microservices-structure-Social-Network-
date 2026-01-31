@@ -92,4 +92,4 @@ export interface User_Login_Data {
     }
 }
 
-export type BatchUser = Record<string, {id: number, avatarUrl: string, login: string, expiredAt: Date}>
+export type BatchUser = Record<string, {avatarUrl: string, login: string}>

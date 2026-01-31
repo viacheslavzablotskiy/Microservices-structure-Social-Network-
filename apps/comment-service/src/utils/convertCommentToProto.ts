@@ -2,7 +2,7 @@ import {CommentEntity, CommentEnity_Proto} from '@repo/user-interfaces'
 import {convertDateToTimeStamp} from '@repo/proto'
 
 
-export function convertCommentToProtoComment(data: CommentEntity): CommentEnity_Proto {
+export function convertCommentToProtoComment(data: CommentEntity): Omit<CommentEnity_Proto, 'userData'> {
     return {
         id: data.id,
         userId: data.userId,

@@ -9,7 +9,8 @@ import { CachePackageMdoule } from '@repo/chache-package'
 import {ConnectionModule} from '@repo/rabbitmq-package'
 import { CacheInterseptorPostPage } from './settings/main.interceptor';
 import { RpcExceptionFilter } from '@repo/api';
-
+import { ClientsModule } from '@nestjs/microservices';
+import { Transport } from '@nestjs/microservices';
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forFeature([PostEntity]),
@@ -30,6 +31,17 @@ import { RpcExceptionFilter } from '@repo/api';
         logging: true
       })
     }),
+    ClientsModule.register([
+      {
+        name: 'DIST-USER-PATH',
+        transport: Transport.GRPC,
+        options: {
+          package: 'distuser',
+          protoPath: require.resolve('@repo/proto/dist-user.proto'),
+          url: '0.0.0.0:5020'
+        }
+      }
+    ]),
     CachePackageMdoule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

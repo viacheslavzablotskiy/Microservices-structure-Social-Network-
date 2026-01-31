@@ -16,5 +16,17 @@ export interface CommentEnity_Proto {
     postId: number,
     content: string,
     createdAt: TimeStamp,
-    updatedAt: TimeStamp
+    updatedAt: TimeStamp,
+    userData: {
+        avatarUrl: string,
+        login: string
+    }
+}
+
+
+export interface ReturnCommentTypeData extends CommentEntity{
+    userData: {
+        login: string,
+        avatarUrl: string
+    }
 }

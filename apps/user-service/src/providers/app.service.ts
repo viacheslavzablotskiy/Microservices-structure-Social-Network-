@@ -51,10 +51,10 @@ export class UserService {
 
   async handleLoadOfTheBunchUser(userIds: number[]): Promise<BatchUser> {
     const userId =  await this.repository.find({
-      where: {id: In(userIds)}, select: ['id', 'avatarUrl', 'login']
+      where: {id: In(userIds)}, select: ['avatarUrl', 'login']
     })
     return userId.reduce((acc, user) => {
-        acc[user.id] = {id: user.id, avatarKey: user.avatarUrl, login: user.login}
+        acc[user.id] = {avatarKey: user.avatarUrl, login: user.login}
         return acc
     }, {})
   }

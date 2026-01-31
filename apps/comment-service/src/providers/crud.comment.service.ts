@@ -4,12 +4,13 @@ import { CommentEnity_Proto, Post_Enitity_Proto } from "@repo/user-interfaces";
 import { CommentEnity } from "src/entitis/comment.entity";
 import { Repository } from "typeorm";
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
-import { convertDateToTimeStamp } from "@repo/proto";
+import { convertDateToTimeStamp, DistUserService } from "@repo/proto";
 import * as amqp from 'amqplib'
 import {ConnectionService} from '@repo/rabbitmq-package'
 import { ConfigService } from "@nestjs/config";
 import { CacheService } from "@repo/chache-package";
-import { RpcException } from "@nestjs/microservices";
+import { type ClientGrpc, RpcException } from "@nestjs/microservices";
+import { firstValueFrom } from "rxjs";
 
 
 const ROUTING_KEY = {
@@ -31,12 +32,14 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
     private exchangeName: string
     private routingsKeys: Record<RoutingKeys, string>
     private postPageKeyRedis: string
+    private distUserService: DistUserService
 
     constructor(
         @InjectRepository(CommentEnity) private readonly repositoryComment: Repository<CommentEnity>,
         private readonly configService: ConfigService,
         private readonly connectionService: ConnectionService,
-        private readonly cacheService: CacheService
+        private readonly cacheService: CacheService,
+        @Inject('DIST-USER-PATH') private readonly client: ClientGrpc
     ) {}
 
     async onModuleInit() {
@@ -51,6 +54,8 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
             DELETE_COMMENT_PAGE: this.configService.get<string>('COMMENT_DEL_PAGE_ROUTING_KEY') || '',
             DELETE_COUNT_COMMENT: this.configService.get<string>('COMMENT_DEL_COUNT_KEY') || ''
         }
+
+        this.distUserService = this.client.getService<DistUserService>('DistUserService')
     }
 
     async safePublish<K extends RoutingKeys>(routingKey: K, payload: Payload<K>) {
@@ -71,7 +76,6 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
             postId: data.postId,
             content: data.content
             })
-
             const response = await this.repositoryComment.save(creationData)
 
             const posts = await this.cacheService.get<Post_Enitity_Proto[]>(this.postPageKeyRedis)
@@ -82,14 +86,16 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
                 this.safePublish('DELETE_COUNT_COMMENT', {postId: response.postId}),
             ]
             if (inFirstPage) task.push(this.safePublish('DELETE_POST_PAGE', ''))
-            
             const result = await Promise.allSettled(task)
             result.forEach((task) => {
                 if (task.status === 'rejected') console.error(task.reason)
            })
 
+           const userData = await firstValueFrom(this.distUserService.getBatchData([response.userId]))
+
             return {
             ...response,
+            userData: userData[response.userId],
             createdAt: convertDateToTimeStamp(response.createdAt),
             updatedAt: convertDateToTimeStamp(response.updatedAt)
             }
@@ -115,9 +121,13 @@ export class CrudCommentService implements OnModuleInit, OnModuleDestroy {
         const updated_data = await this.repositoryComment.findOneBy({
             id: data.id
         })
+        if (!updated_data) throw new RpcException('Comment was not updated')
+
+        const userData = await firstValueFrom(this.distUserService.getBatchData([updated_data.userId]))
 
         return {
-            ...updated_data!,
+            ...updated_data,
+            userData: userData[updated_data.userId],
             createdAt: convertDateToTimeStamp(updated_data!.createdAt),
             updatedAt: convertDateToTimeStamp(updated_data!.updatedAt)
         }

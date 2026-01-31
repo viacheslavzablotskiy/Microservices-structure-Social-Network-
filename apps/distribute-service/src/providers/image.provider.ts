@@ -31,10 +31,20 @@ export class ImageLoader implements OnModuleInit{
         this.distUserService = this.client.getService<DistUserService>('DistUserService')
     }
 
+   extractKeyFromUrl(url: string) {
+    const part = url.split('.amazonaws.com/')
+    if (part.length < 2) {
+        throw new HttpException('S3 url invalid', HttpStatus.BAD_REQUEST)
+    }
+    return part[1]
+   }
+
     // create new object with the new key or updated already created object with existing key
-    async loadImageInS3(file: Express.Multer.File, key?:string): Promise<{key: string}> {
+    async loadImageInS3(file: Express.Multer.File, imageUrl?: string): Promise<{url: string}> {
+        const region = this.configSerivce.get<string>('AWS_REGION') || ''
         const bucketName = this.configSerivce.get<string>('BUCKET_NAME') || ''
-        const objectKey = !key || key?.length === 0 ? `${Date.now()}-${file.originalname}` : key // if we have key we use this, if not we create new
+        let objectKey = `${Date.now()}-${file.originalname}`
+        if (imageUrl) objectKey = this.extractKeyFromUrl(imageUrl)
 
         await this.s3Client.send(
             new PutObjectCommand({
@@ -45,10 +55,8 @@ export class ImageLoader implements OnModuleInit{
             })
         )
 
-        if (key && key.length > 0) {
-            await this.cacheService.del(objectKey)
-        }
-        return {key: objectKey}
+        const url = `https://${bucketName}.s3.${region}.amazonaws.com/${objectKey}`;
+        return {url: url}
     }
 
     async deleteImage(key: string): Promise<{deleted: boolean}> {
@@ -72,47 +80,47 @@ export class ImageLoader implements OnModuleInit{
     }
 
 
-    async getImageUrl(key: string): Promise<{path: string}> {
-        const bucketName = this.configSerivce.get<string>('BUCKET_NAME') || ''
-        if (!bucketName) throw new HttpException('Invalid bucket name', HttpStatus.NOT_ACCEPTABLE)
-        const cached: string | undefined = await this.cacheService.get(key)
-        if (cached) return {path: cached}
+    // async getImageUrl(key: string): Promise<{path: string}> {
+    //     const bucketName = this.configSerivce.get<string>('BUCKET_NAME') || ''
+    //     if (!bucketName) throw new HttpException('Invalid bucket name', HttpStatus.NOT_ACCEPTABLE)
+    //     const cached: string | undefined = await this.cacheService.get(key)
+    //     if (cached) return {path: cached}
         
-        const command = new GetObjectCommand({
-            Bucket: bucketName,
-            Key: key,
-        })
-        const signedUrl = await getSignedUrl(this.s3Client, command, {expiresIn: 420})
+    //     const command = new GetObjectCommand({
+    //         Bucket: bucketName,
+    //         Key: key,
+    //     })
+    //     const signedUrl = await getSignedUrl(this.s3Client, command, {expiresIn: 420})
 
-        await this.cacheService.set(key, signedUrl, 420_000)
-        return {path: signedUrl}
-    }
+    //     await this.cacheService.set(key, signedUrl, 420_000)
+    //     return {path: signedUrl}
+    // }
 
-    async getBatchDataUser(data: {userIds: number[]}): Promise<BatchUser> {
-        const ttl = 42 * 60 * 1000
-        const now = Date.now()
-        const batchUserData: BatchDataPorto =  await firstValueFrom(this.distUserService.getBatchData(data.userIds))
-
-
-        const entries: [string, BatchUser[string]][] = await Promise.all(
-            Object.entries(batchUserData).map(async ([key, value]): Promise<[string, BatchUser[string]]> => {
-                const imageUrl = await this.getImageUrl(value.avatarKey)
-                const result: [string, BatchUser[string]] = [
-                    key, {
-                        id: value.id,
-                        avatarUrl: imageUrl.path,
-                        login: value.login,
-                        expiredAt: new Date(now + ttl)  
-                    } 
-                ]
-                return result
-            })
-        )
+    // async getBatchDataUser(data: {userIds: number[]}): Promise<BatchUser> {
+    //     const ttl = 42 * 60 * 1000
+    //     const now = Date.now()
+    //     const batchUserData: BatchDataPorto =  await firstValueFrom(this.distUserService.getBatchData(data.userIds))
 
 
-        const result: BatchUser = Object.fromEntries(entries)
-        return result
-    }
+    //     const entries: [string, BatchUser[string]][] = await Promise.all(
+    //         Object.entries(batchUserData).map(async ([key, value]): Promise<[string, BatchUser[string]]> => {
+    //             const imageUrl = await this.getImageUrl(value.avatarKey)
+    //             const result: [string, BatchUser[string]] = [
+    //                 key, {
+    //                     id: value.id,
+    //                     avatarUrl: imageUrl.path,
+    //                     login: value.login,
+    //                     expiredAt: new Date(now + ttl)  
+    //                 } 
+    //             ]
+    //             return result
+    //         })
+    //     )
+
+
+    //     const result: BatchUser = Object.fromEntries(entries)
+    //     return result
+    // }
  
     // async getImageBuffer(key: string): Promise<{image: Buffer}> {
     //     const bucketName = this.configSerivce.get<string>('BUCKET_NAME') || '' 

@@ -64,7 +64,7 @@ export class MainPostCOntriller {
         @Req() req: Request,
         @Param("id") id: string,
         @Body(new ZodValidationPipe(UpdatetingPostDataSchema)) dto: UpdatePostDataType
-    ): Promise<Post_Entity> {
+    ): Promise<RetrunPostEntity> {
         if (!req.user) throw new UnauthorizedException('you dont have token (post)')
         return await this.postService.updatePost({...dto, id: Number(id), userId: req.user.userId})
     }

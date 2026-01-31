@@ -8,7 +8,7 @@ export interface Post_Entity {
     content: string,
     imageUrl: string
     createdAt: Date,
-    updatedAt: Date
+    updatedAt: Date,
 }
 
 export interface Post_Enitity_Proto {
@@ -18,7 +18,11 @@ export interface Post_Enitity_Proto {
     content: string;
     imageUrl: string;
     createdAt: TimeStamp,
-    updatedAt: TimeStamp
+    updatedAt: TimeStamp,
+    userData: {
+        login: string,
+        avatarUrl:string
+    }
 }
 
 
@@ -34,4 +38,8 @@ export interface RetrunPostEntity extends Post_Entity {
     commentCount: number,
     likeCount: number,
     isLiked: boolean
+    userData: {
+        login: string,
+        avatarUrl:string
+    }
 }

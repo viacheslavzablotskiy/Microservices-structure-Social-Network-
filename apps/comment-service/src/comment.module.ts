@@ -10,7 +10,7 @@ import EventCommentService from './providers/eventPatter.comment';
 import {ConnectionModule} from '@repo/rabbitmq-package'
 import { RpcExceptionFilter } from '@repo/api';
 import { CacheInterceptorPage } from './settings/main.interceptors';
-
+import { ClientsModule, Transport } from '@nestjs/microservices';
 @Module({
   imports: [ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forFeature([CommentEnity]),
@@ -31,6 +31,17 @@ import { CacheInterceptorPage } from './settings/main.interceptors';
         logging: true
       })
     }),
+    ClientsModule.register([
+      {
+        name: 'DIST-USER-PATH',
+        transport: Transport.GRPC,
+        options: {
+          package: 'distuser',
+          protoPath: require.resolve('@repo/proto/dist-user.proto'),
+          url: '0.0.0.0:5020'
+        }
+      }
+    ]),
     CachePackageMdoule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

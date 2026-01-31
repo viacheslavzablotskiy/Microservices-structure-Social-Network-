@@ -6,7 +6,7 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import React, { useEffect, useState } from "react";
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { useUploadImageMutation } from "../../../main-app-settings/endpoints/images.endpoints";
-import { postEndpoints, useCreatePostMutation } from "../../../main-app-settings/endpoints/post.enpoints";
+import { postEndpoints, postsAdapter, useCreatePostMutation } from "../../../main-app-settings/endpoints/post.enpoints";
 
 
 const createNewPost = () => {
@@ -41,7 +41,7 @@ const createNewPost = () => {
             ...data, imageUrl: data.imageUrl
         }).unwrap()
         dispatch(postEndpoints.util.updateQueryData('getPosts', {}, (draft) => {
-            draft.push(createdPost)
+            postsAdapter.addOne(draft, createdPost)
         }))
     }
 

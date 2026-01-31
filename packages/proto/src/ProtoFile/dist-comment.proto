@@ -42,6 +42,13 @@ message CommentProto {
     string content = 4;
     google.protobuf.Timestamp created_at = 5;
     google.protobuf.Timestamp updated_at = 6;
+    UserDataProto user_data = 7;
+}
+
+//data for the user
+message UserDataProto {
+    string avatar_url = 1;
+    string login = 2;
 }
 
 // Array of the comment

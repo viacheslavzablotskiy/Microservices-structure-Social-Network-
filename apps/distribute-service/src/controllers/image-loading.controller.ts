@@ -29,7 +29,7 @@ export class ImageController {
                     type: 'string',
                     format: 'binary'
                 },
-                key: {
+                imageUrl: {
                     type: 'string',
                     nullable: true,
                     description: 'key is empty - create new object, is not rewrite alredy existed'
@@ -40,30 +40,30 @@ export class ImageController {
     @Post('uplaodImage')
     @UseInterceptors(FileInterceptor('image'), TimersIntercertor)
     async loadingImage( @UploadedFile(new ImageMimeTypePipe()) file: Express.Multer.File,
-    @Body('key') key?: string): Promise<{key: string}> {
-        return this.imageLoager.loadImageInS3(file, key)
+    @Body('imageUrl') imageUrl?: string): Promise<{url: string}> {
+        return this.imageLoager.loadImageInS3(file, imageUrl)
     }
 
-    @ApiBearerAuth('auth-part')
-    @ApiCookieAuth()
-    @UseGuards(JWTAuthGuard)
-    @ApiOperation({summary: 'get url', description: 'get valid url'})
-    @Get(':key')
-    @UseInterceptors(TimersIntercertor)
-    async getImageUrl(
-        @Param('key') key: string
-    ): Promise<{path: string}>  {
-        return this.imageLoager.getImageUrl(key)
-    }
+    // @ApiBearerAuth('auth-part')
+    // @ApiCookieAuth()
+    // @UseGuards(JWTAuthGuard)
+    // @ApiOperation({summary: 'get url', description: 'get valid url'})
+    // @Get(':key')
+    // @UseInterceptors(TimersIntercertor)
+    // async getImageUrl(
+    //     @Param('key') key: string
+    // ): Promise<{path: string}>  {
+    //     return this.imageLoager.getImageUrl(key)
+    // }
 
-    @ApiOperation({summary: 'get data', description: 'get image and intial data for the post and comment'})
-    @ApiBearerAuth('auth-part')
-    @UseGuards(JWTAuthGuard)
-    @ApiQuery({type: String, isArray: true, required: true, description: 'array of the userIds that we need get'})
-    @UseInterceptors(TimersIntercertor)
-    @Get('batch')
-    async getBatchDataForPostAndComments(@Query('userIds') userIds: string[]): Promise<BatchUser> {
-        const userIdsData = userIds.map(userId => Number(userId))
-        return this.imageLoager.getBatchDataUser({userIds: userIdsData})
-    }
+    // @ApiOperation({summary: 'get data', description: 'get image and intial data for the post and comment'})
+    // @ApiBearerAuth('auth-part')
+    // @UseGuards(JWTAuthGuard)
+    // @ApiQuery({type: String, isArray: true, required: true, description: 'array of the userIds that we need get'})
+    // @UseInterceptors(TimersIntercertor)
+    // @Get('batch')
+    // async getBatchDataForPostAndComments(@Query('userIds') userIds: string[]): Promise<BatchUser> {
+    //     const userIdsData = userIds.map(userId => Number(userId))
+    //     return this.imageLoager.getBatchDataUser({userIds: userIdsData})
+    // }
 }

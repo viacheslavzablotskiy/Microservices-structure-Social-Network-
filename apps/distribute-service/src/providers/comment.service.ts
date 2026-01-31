@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Inject, Injectable, OnModuleInit } from "@nestjs/common";
 import { type ClientGrpc } from "@nestjs/microservices";
 import {CommentReturnCount, convertDateToTimeStamp, convertTimeStampToDate, DistCommentService} from '@repo/proto'
-import { CommentEntity } from "@repo/user-interfaces";
+import { CommentEntity, ReturnCommentTypeData } from "@repo/user-interfaces";
 import { firstValueFrom } from "rxjs";
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb'
 import { int32, number } from "zod";
@@ -19,7 +19,7 @@ export class MainCommentService implements OnModuleInit{
     }
 
 
-    async getInitialCommentData(data: {postId: number}): Promise<CommentEntity[]> {
+    async getInitialCommentData(data: {postId: number}): Promise<ReturnCommentTypeData[]> {
         try {
              const response = await firstValueFrom(this.distCommentService.getInitialCommentData(data))
 
@@ -44,7 +44,7 @@ export class MainCommentService implements OnModuleInit{
         }
     } 
 
-    async getOtherPartOfData(data: {postId: number, lastId: number}) : Promise<CommentEntity[]> {
+    async getOtherPartOfData(data: {postId: number, lastId: number}) : Promise<ReturnCommentTypeData[]> {
         try {
              const response = await firstValueFrom(this.distCommentService.getOtherCommentData(data))
 
@@ -66,7 +66,7 @@ export class MainCommentService implements OnModuleInit{
         }
     }
 
-    async creationNewComment(data: Pick<CommentEntity,'postId' | 'userId' | 'content'>) : Promise<CommentEntity> {
+    async creationNewComment(data: Pick<CommentEntity,'postId' | 'userId' | 'content'>) : Promise<ReturnCommentTypeData> {
         const response = await firstValueFrom(this.distCommentService.createNewComment(data)).catch((error) => {
             throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
                 cause: error
@@ -79,7 +79,7 @@ export class MainCommentService implements OnModuleInit{
         }
     }
 
-    async updationNewComment(data: Pick<CommentEntity, 'content' | 'id' | 'userId'>) : Promise<CommentEntity> {
+    async updationNewComment(data: Pick<CommentEntity, 'content' | 'id' | 'userId'>) : Promise<ReturnCommentTypeData> {
         const response = await firstValueFrom(this.distCommentService.updateComment(data)).catch((error) => {
             throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
                 cause: error

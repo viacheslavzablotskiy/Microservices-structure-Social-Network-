@@ -79,12 +79,13 @@ export class MainPostService implements OnModuleInit{
         }
     }
 
-    async creationNewPost(data: Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id'>) : Promise<RetrunPostEntity> {
+    async creationNewPost(data: Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'id' | 'userData'>) : Promise<RetrunPostEntity> {
         const response = await firstValueFrom(this.distPostService.createNewPost(data)).catch((error) => {
             throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {
                 cause: error
             })
         })
+
         return {
             ...response,
             commentCount: 0,
@@ -95,17 +96,28 @@ export class MainPostService implements OnModuleInit{
         }
     }
 
-    async updatePost(data: Partial<Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'userId' | 'id'>>
+    async updatePost(data: Partial<Omit<Post_Entity, 'createdAt' | 'updatedAt' | 'userId' | 'id' | 'userData'>>
         & Pick<Post_Entity, 'id' | 'userId'>
-    ) : Promise<Post_Entity> {
+    ) : Promise<RetrunPostEntity> {
         const response = await firstValueFrom(this.distPostService.updatePost(data)).catch((error) => {
             throw new HttpException('Invalid data', HttpStatus.NOT_ACCEPTABLE, {cause: error})
-        }) /// there we return Post_Entity_Proto
-        return {
-            ...response,
-            createdAt: convertTimeStampToDate(response.createdAt),
-            updatedAt: convertTimeStampToDate(response.updatedAt)
-        }
+        }) 
+
+        const postIds = [...new Set([response.id])]
+        const [{comments}, {likes}] = await Promise.all([
+                this.mainCommentService.getCountofComment(postIds),
+                this.likeService.likeCountOfPost(postIds, data.userId)
+            ]) 
+
+        
+            return {
+                    ...response,
+                    createdAt: convertTimeStampToDate(response.createdAt),
+                    updatedAt: convertTimeStampToDate(response.updatedAt),
+                    likeCount: likes[response.id].like,
+                    isLiked: likes[response.id].isLiked,
+                    commentCount: comments[response.id]
+                }
     }
 
     async deletePost(data: {id: number, userId: number}): Promise<Empty> {

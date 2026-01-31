@@ -1,5 +1,5 @@
 import { apiSlice } from "./endpointsRTX-Query";
-import { postEndpoints } from "./post.enpoints";
+import { postEndpoints, postsAdapter } from "./post.enpoints";
 
 
 
@@ -12,7 +12,7 @@ export const likeEndpoints = apiSlice.injectEndpoints({
             }),
             async onQueryStarted({postId, isLiked}, {dispatch, queryFulfilled}) {
                 const result = dispatch(postEndpoints.util.updateQueryData('getPosts', {}, (draft) => {
-                    const currentPost = draft.find(post => post.id === Number(postId))
+                    const currentPost =  postsAdapter.getSelectors().selectById(draft, Number(postId))
                     if (currentPost) {
                         currentPost.isLiked = !currentPost.isLiked,
                         currentPost.likeCount += currentPost.isLiked ? 1 : -1

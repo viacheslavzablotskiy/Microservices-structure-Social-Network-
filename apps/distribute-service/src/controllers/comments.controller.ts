@@ -3,7 +3,8 @@ import {MainCommentService} from '../providers/comment.service'
 import { JWTAuthGuard, ZodValidationPipe } from "@repo/api";
 import {CreationCommentSchema, type CreationCommentType, UpdatingCommentSchema,
      type UpdatingCommentType, DeleteCommentSchema, type DeleteCommentType,
-     CommentEntity} from '@repo/user-interfaces'
+     CommentEntity,
+     ReturnCommentTypeData} from '@repo/user-interfaces'
 import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CommentEntitySwagger, CreatioNcommentSwagger, DeleteCommentSwagger, UpdationCommentSwagger } from "src/documentation_classes/comments.swagger";
 import { UpdationPostSwagger } from "src/documentation_classes/post.swagger";
@@ -28,7 +29,7 @@ export class MainCommentController {
     async handleLoadMoreComments(
         @Param('postId') postId: string,
         @Query('lastId') lastId?: string
-    ) : Promise<CommentEntity[]> {
+    ) : Promise<ReturnCommentTypeData[]> {
         if (!lastId && !postId) throw new BadRequestException('error, because we dont have initialComments')
         if (!lastId) {
             return await this.commentService.getInitialCommentData({postId: Number(postId)})
@@ -46,7 +47,7 @@ export class MainCommentController {
     async hadleCreateNewComent(
         @Req() req: Request,
         @Body(new ZodValidationPipe(CreationCommentSchema)) dto: CreationCommentType
-    ) : Promise<CommentEntity> {
+    ) : Promise<ReturnCommentTypeData> {
         if (!req.user) throw new UnauthorizedException('you dont have token (comment)')
 
         return await this.commentService.creationNewComment({...dto, userId: req.user?.userId})
@@ -63,7 +64,7 @@ export class MainCommentController {
         @Req() req: Request,
         @Param('id') id: string,
         @Body(new ZodValidationPipe(UpdatingCommentSchema)) dto: UpdatingCommentType
-    ): Promise<CommentEntity> {
+    ): Promise<ReturnCommentTypeData> {
         if (!req.user) throw new UnauthorizedException('you dont have the token')
         return await this.commentService.updationNewComment({content: dto.content, id: Number(id), userId: req.user.userId})
     }

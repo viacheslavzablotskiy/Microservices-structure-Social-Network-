@@ -1,20 +1,28 @@
-import type { CommentEntity, CreationCommentType, UpdatingCommentType } from "@repo/user-interfaces";
+import type {CreationCommentType, ReturnCommentTypeData, UpdatingCommentType } from "@repo/user-interfaces";
 import { apiSlice } from "./endpointsRTX-Query";
+import { createEntityAdapter, type EntityState } from "@reduxjs/toolkit";
 
+export const commentAdapter = createEntityAdapter({
+    selectId: (comment: ReturnCommentTypeData) => comment.id,
+    sortComparer: (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+})
 
-
+export const commnetSelectors = commentAdapter.getSelectors()
 
 export const commentEndpoints =  apiSlice.injectEndpoints({
-    endpoints: (buidler) => ({
-        getComments: buidler.query<CommentEntity[], {postId: string, lastId?: string}>({
+    endpoints: (builder) => ({
+        getComments: builder.query<EntityState<ReturnCommentTypeData, number>, {postId: string, lastId?: string}>({
             query: data => {
                 const query = new URLSearchParams()
                 if (data.lastId) query.append('lastId', data.lastId)
                 return `comments/${data.postId}?${query.toString()}`
+            },
+            transformResponse: (response: ReturnCommentTypeData[]) => {
+                return commentAdapter.addMany(commentAdapter.getInitialState(), response)
             }
         }),
 
-        createComment: buidler.mutation<CommentEntity, CreationCommentType>({
+        createComment: builder.mutation<ReturnCommentTypeData, CreationCommentType>({
             query: (data) => {
                 return {
                     url: 'comments/create',
@@ -23,7 +31,7 @@ export const commentEndpoints =  apiSlice.injectEndpoints({
                 }
             }
         }),
-        updateComment: buidler.mutation<CommentEntity, {commentId: string, data: UpdatingCommentType}>({
+        updateComment: builder.mutation<ReturnCommentTypeData, {commentId: string, data: UpdatingCommentType}>({
             query: (data) => {
                 return {
                     url: `comments/${data.commentId}`,
@@ -33,7 +41,7 @@ export const commentEndpoints =  apiSlice.injectEndpoints({
             }
         }),
 
-        deleteComment: buidler.mutation<void, {commentId: string}>({
+        deleteComment: builder.mutation<void, {commentId: string}>({
             query: (data) => {
                 return {
                     url: `comments/${data.commentId}`,

@@ -2,7 +2,7 @@ import { Observable } from "rxjs"
 
 
 
-export type BatchDataPorto = Record<string, {id: number, avatarKey: string, login: string}>
+export type BatchDataPorto = Record<string, {avatarUrl: string, login: string}>
 
 
 

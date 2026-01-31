@@ -1,8 +1,4 @@
-import type { BatchUser } from "@repo/user-interfaces";
 import { apiSlice } from "./endpointsRTX-Query";
-
-
-
 
 export const imageEndpoints = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
@@ -16,19 +12,7 @@ export const imageEndpoints = apiSlice.injectEndpoints({
                 }
             }
         }),
-
-        getTempraryUrl: builder.query<{path: string}, {key: string}>({
-            query: (data) => {return `image/${data.key}`}
-        }),
-
-        getBatchDataUser: builder.query<BatchUser, {userIds: number[]}>({
-            query: (data) => {
-                const query = new URLSearchParams()
-                data.userIds.forEach(userId => query.append('userIds', userId.toString()))
-                return `image/batch?${query.toString()}`
-            }
-        })
     })
 })
 
-export const {useUploadImageMutation, useGetTempraryUrlQuery, useGetBatchDataUserQuery, useLazyGetBatchDataUserQuery, useLazyGetTempraryUrlQuery} = imageEndpoints
+export const {useUploadImageMutation} = imageEndpoints
