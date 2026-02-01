@@ -5,8 +5,11 @@ import { useEffect, useRef, useState } from "react"
 import { useAppDispatch } from "../../../main-app-settings/some-settings/main-hooks"
 import { Comment } from "./comment"
 
-export const CommentList = () => {
-    const { postId } = useParams()
+export type CommentProp = {
+    postId: string
+}
+
+export const CommentList: React.FC<CommentProp> = ({postId}) => {
     const {data: comments} = useGetCommentsQuery({postId: postId!})
     const [fetchMore] = useLazyGetCommentsQuery()
     const dispatch = useAppDispatch()
@@ -71,5 +74,5 @@ export const CommentById: React.FC<{commentId: number, postId: string}> = ({comm
         }
     })
 
-    return comment ? <Comment comment={comment}/> : null
+    return comment ? <Comment comment={comment} postId={Number(postId)}/> : null
 }

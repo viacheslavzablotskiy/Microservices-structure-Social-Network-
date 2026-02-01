@@ -37,8 +37,8 @@ export const commentEndpoints =  apiSlice.injectEndpoints({
                     url: `comments/${data.commentId}`,
                     method: 'PATCH',
                     body: data.data
-                }
-            }
+                }            
+            },
         }),
 
         deleteComment: builder.mutation<void, {commentId: string}>({
